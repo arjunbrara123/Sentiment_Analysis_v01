@@ -5,7 +5,7 @@ from charts import *
 from getpass import getuser
 from sklearn.linear_model import LinearRegression
 from openai import OpenAI
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 import plotly.express as px
 
 # Set Streamlit Page Config
@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-load_dotenv()
+#load_dotenv()
 
 input_SA_Monthly_data = "BG_SA_Monthly_Data.csv" #"BG_LLM_Test_Output_01.csv"
 input_Raw_Comments_Text_data = "BG_cleaned_reviews_data.csv"
