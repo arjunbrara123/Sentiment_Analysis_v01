@@ -1,0 +1,46 @@
+/* Global dashboard body styling */
+body {
+    background-color: #1E1E1E;
+    color: #FAFAFA;
+}
+
+h1, h2, h3 {
+    color: #012973;
+}
+
+section[data-testid="stSidebar"] {
+    background-color: #0490d7;
+}
+
+[data-testid="stSidebar"] {
+    background: linear-gradient(to-left, #0490d7, white);
+    color: black;
+}
+
+.stText, .stHeader, .stSubheader, .stMarkdown {
+    color: #012973;
+}
+
+/* Tabs styling */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 2px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 50px;
+    white-space: pre-wrap;
+    background-color: #F0F2F6;
+    border-radius: 4px 4px 0px 0px;
+    gap: 1px;
+    padding: 10px 30px;
+    color: #0490d7;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #0490d7;
+    color: #ffffff;
+}
+
+.stTabs [data-baseweb="tab-highlight"] {
+    background-color: #012973;
+}
