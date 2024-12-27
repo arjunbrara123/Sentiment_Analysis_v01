@@ -503,7 +503,6 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
         )
     query_llm = st.text_area("Enter your more specific query here...")
     client = OpenAI()
-    load_dotenv()
     convo = []
 
     # Filter relevant data
