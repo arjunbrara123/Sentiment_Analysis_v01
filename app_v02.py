@@ -503,7 +503,6 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
         )
     query_llm = st.text_area("Enter your more specific query here...")
     client = OpenAI()
-    convo = []
 
     # Filter relevant data
 
@@ -564,8 +563,15 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
         if len(query_llm) == 0:
             st.markdown(f"<b>💁‍♀️ Alice</b>: Please enter a question, the query box is currently blank...", unsafe_allow_html=True)
         else:
-            st.markdown(f"<b>💁‍♀️ Alice</b>: {llm_inference(query_llm,filtered_reviews)}", unsafe_allow_html=True)
+            answer = llm_inference(query_llm,filtered_reviews)
+            st.markdown(f"<b>💁‍♀️ Alice</b>: {answer}", unsafe_allow_html=True)
+            response = client.audio.speech.create(
+                model="tts-1",
+                voice="nova",
+                input=answer
+            )
+            response.write_to_file("llm_answer.mp3")
+            with open("llm_answer.mp3", "rb") as audio_file:
+                st.audio(audio_file, format='audio/mp3')
 
-        for item in convo:
-            st.markdown(item, unsafe_allow_html=True)
-    # LLM Thinking...
+
