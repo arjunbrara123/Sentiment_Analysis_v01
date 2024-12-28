@@ -149,7 +149,7 @@ def add_red_line(fig):
 def plot_chart_1(group_var, title, desc, data):
 
     # Ensure group var is numeric
-    data[group_var] = pd.to_numeric(data[group_var], errors='coerce')
+    #data[group_var] = pd.to_numeric(data[group_var], errors='coerce')
 
     # Aggregate data into grouping for plot
     numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
