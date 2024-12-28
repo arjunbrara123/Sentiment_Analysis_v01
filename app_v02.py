@@ -294,8 +294,8 @@ if lob_filter == "🚁 Overview":
         for Detractors).
         """)
 
-        #if "Percentage" in tab_data.columns:
-        #    tab_data["Percentage"] = tab_data["Percentage"].str.replace("%", "", regex=False).astype(float)
+        if "Percentage" in tab_data.columns:
+            tab_data.loc[tab_data.index, "Percentage"] = tab_data["Percentage"].str.replace("%", "", regex=False).astype(float)
 
         # Separate out the three main categories from tab_data
         promoters = tab_data[tab_data["Type"].str.contains("Promoters", case=False, na=False)]
@@ -311,11 +311,6 @@ if lob_filter == "🚁 Overview":
         with col1:
             st.markdown("### 🥳 Promoters")
             if not promoters.empty:
-
-                # Convert "Percentage" column from strings like "44%" to floats if needed
-                promoters["Percentage"] = (
-                    promoters["Percentage"].str.replace("%", "", regex=False).astype(float)
-                )
 
                 fig_promoters_treemap = px.treemap(
                     promoters,
@@ -347,11 +342,6 @@ if lob_filter == "🚁 Overview":
             st.markdown("### 🤬 Detractors")
             if not detractors.empty:
 
-                # Convert "Percentage" column from strings like "44%" to floats if needed
-                detractors["Percentage"] = (
-                    detractors["Percentage"].str.replace("%", "", regex=False).astype(float)
-                )
-
                 fig_detractors_treemap = px.treemap(
                     detractors,
                     path=["Tab Headline"],
@@ -378,11 +368,6 @@ if lob_filter == "🚁 Overview":
         with col3:
             st.markdown("### 👽 Emerging Trends")
             if not emerging.empty:
-
-                # Convert "Percentage" column from strings like "44%" to floats if needed
-                emerging["Percentage"] = (
-                    emerging["Percentage"].str.replace("%", "", regex=False).astype(float)
-                )
 
                 fig_emerging_treemap = px.treemap(
                     emerging,
