@@ -19,11 +19,17 @@ emotion_weights = {
 }
 emotion_categories = list(emotion_colours.keys())
 product_colours = {
-    'Energy': 'maroon',
-    'Appliance Repair': 'orange',
+    'Energy': 'orange',
+    'Appliance Repair': 'maroon',
     'Gas Products': 'green',
     'Plumbing & Drains': 'magenta',
     'Unknown': 'grey'
+}
+product_emoji_map = {
+    "Gas Products": "🚿 Gas Products",
+    "Energy": "⚡ Energy",
+    "Plumbing & Drains": "🪠 Plumbing & Drains",
+    "Appliance Repair": "📺 Appliance Repair"
 }
 product_categories = list(product_colours.keys())
 energy_colours = {
