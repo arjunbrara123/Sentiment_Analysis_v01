@@ -1,12 +1,13 @@
 # Import required packages
-import streamlit
-
 from charts import *
 from getpass import getuser
 from sklearn.linear_model import LinearRegression
 from openai import OpenAI
-#from dotenv import load_dotenv
 import plotly.express as px
+from datetime import datetime
+
+#from dotenv import load_dotenv
+#load_dotenv()
 
 # Set Streamlit Page Config
 st.set_page_config(
@@ -16,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-#load_dotenv()
+START_TIME = datetime.now()
 
 input_SA_Monthly_data = "BG_SA_Monthly_Data.csv" #"BG_LLM_Test_Output_01.csv"
 input_Raw_Comments_Text_data = "BG_cleaned_reviews_data.csv"
@@ -91,7 +92,7 @@ with st.sidebar:
         unsafe_allow_html=True
     )
 
-    with st.expander("Insight Mode", expanded=True):
+    with st.expander("🕵️ Insight Mode", expanded=True):
         lob_filter = st.radio(
             "Select Insight",
             options=["🚁 Overview"] + insight_list + ["💁‍♀️ Ask Alice..."],
@@ -99,7 +100,7 @@ with st.sidebar:
             help="Select an option to change the grouping of tabs displayed on the main window"
         )
 
-    with st.expander("Time Period Settings", expanded=True):
+    with st.expander("🕜 Time Period Settings", expanded=False):
 
         show_projections = st.checkbox("Show Future Projections", value=False,
                            help="Enable this to view predicted sentiment trends based on historical data.")
@@ -205,12 +206,17 @@ with st.sidebar:
             (combined_data["Year-Month"] <= pd.Timestamp(end_date))
             ]
 
-    with st.expander("Select Company", expanded=False):
+    with st.expander("🏫 Select Company", expanded=False):
         selected_company = st.radio(
             "Select Company",
-            options=["British Gas", "Domestic & General", "Corgi HomeCare", "Octopus"],
+            options=["British Gas", "HomeServe", "Domestic & General", "Corgi Homeplan", "247 Home Rescue", "Octopus", "Eon Energy","OVO Evergy"],
             index=0
         )
+
+    with st.expander("⚙️ Settings", expanded=False):
+        tts_flag = st.toggle("Alice Reads Responses Aloud", value=False)
+
+
 # Add custom CSS for rounded borders and shadows
 st.markdown("""
     <style>
@@ -233,15 +239,24 @@ st.markdown("""
 if lob_filter == "🚁 Overview":
 
     # We create two sub-tabs for the Overview
-    overview_tabs = st.tabs(["📚 User Guide", "🚁 Summary"])
+    overview_tabs = st.tabs(["📚 User Guide", "🚁 Summary", "😭 Emotional Breakdown", "🧪 Lapse Predictors"])
 
     # ---------------------------- #
     # 0. USER GUIDE TAB
     # ---------------------------- #
     with overview_tabs[0]:
         st.markdown("## User Guide")
+
+        st.markdown("""
+            Welcome to the **Sentiment Analytics Dashboard**, a cutting-edge tool leveraging **state-of-the-art AI models** to extract actionable insights from real-time online data. 
+            This platform is designed to turn digital noise into digital gold...
+
+            <hr style="border: 1px solid #0490d7; margin: 20px 0;">
+        """, unsafe_allow_html=True)
+
         st.write("""
-        Welcome to the Sentiment Analytics Dashboard! Here's how to use each section:
+        
+        Here's how to use each section:
 
         **1. Insight Mode**  
         Select different insight modes (Promoters, Detractors, etc.) from the sidebar. Each mode shows relevant 
@@ -283,8 +298,8 @@ if lob_filter == "🚁 Overview":
         #    tab_data["Percentage"] = tab_data["Percentage"].str.replace("%", "", regex=False).astype(float)
 
         # Separate out the three main categories from tab_data
-        promoters = tab_data[tab_data["Type"] == "🥳 Promoters"]
-        detractors = tab_data[tab_data["Type"] == "🤬 Detractors"]
+        promoters = tab_data[tab_data["Type"].str.contains("Promoters", case=False, na=False)]
+        detractors = tab_data[tab_data["Type"].str.contains("Detractors", case=False, na=False)]
         emerging = tab_data[tab_data["Type"].str.contains("Emerging", case=False, na=False)]
 
         # Create three columns for Promoters, Detractors, Emerging Trends
@@ -401,6 +416,46 @@ if lob_filter == "🚁 Overview":
         For deeper analysis, explore the specific insight modes in the sidebar or ask a custom question via **Ask Alice**.
         """)
 
+    with overview_tabs[2]:
+        st.markdown("""
+        # Emotional Insights Breakdown
+        """, unsafe_allow_html=True)
+
+        # Overview Text
+        st.markdown("""
+        ### Overview
+        This tab dives deeper into individual emotions, providing detailed insights for each emotion across products and time:
+        - 📈 Visualize monthly trends for each emotion across different product categories, helping identify key patterns.
+        - 🌨️ Explore word clouds that reveal top keywords driving each emotion, filtered for relevance.
+        - 🔎 Insights into how each emotion drives customer behaviour for each product group, such as retention analysis
+    
+        These analyses provide actionable insights into customer experiences and emotions, enabling focused improvements and retention strategies.
+    
+        <hr style="border: 1px solid #0490d7; margin: 20px 0;">
+        """, unsafe_allow_html=True)
+
+        # Tab 1 Chart 1: Sentiment Score by Product over Time
+        plot_chart_1(
+            "Sentiment Score",
+            "Sentiment Score by Product Over Time",
+            "text",
+            filtered_data  # Ensure your data is loaded and available
+        )
+
+    # === Retention Analysis Tab ===
+    with overview_tabs[3]:
+        st.markdown("""
+        # Lapse Rate Analysis
+        """, unsafe_allow_html=True)
+
+        # Tab 1 Chart 1: Sentiment Score by Product over Time
+        plot_chart_1(
+            "Lapse Probability",
+            "Cancellation Sentiment by Product Over Time",
+            "text",
+            filtered_data  # Ensure your data is loaded and available
+        )
+
 elif lob_filter in insight_list:
     # Filter for Promoters
     insight_tabs = tab_data[tab_data["Type"] == lob_filter]
@@ -503,6 +558,7 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
         )
     query_llm = st.text_area("Enter your more specific query here...")
     client = OpenAI()
+    convo = []
 
     # Filter relevant data
 
@@ -564,14 +620,21 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
             st.markdown(f"<b>💁‍♀️ Alice</b>: Please enter a question, the query box is currently blank...", unsafe_allow_html=True)
         else:
             answer = llm_inference(query_llm,filtered_reviews)
-            st.markdown(f"<b>💁‍♀️ Alice</b>: {answer}", unsafe_allow_html=True)
-            response = client.audio.speech.create(
-                model="tts-1",
-                voice="nova",
-                input=answer
-            )
-            response.write_to_file("llm_answer.mp3")
-            with open("llm_answer.mp3", "rb") as audio_file:
-                st.audio(audio_file, format='audio/mp3')
+            st.markdown(f"<b>💁‍♀️ Alice</b>:", unsafe_allow_html=True)
+            st.write(answer)
+            elapsed_time = datetime.now() - START_TIME
+            hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
+            minutes, seconds = divmod(remainder, 60)
+            pd.DataFrame([[datetime.now(),f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}",query_llm,filter_llm_month,filter_llm_prod,"Group Placeholder",answer]]).to_csv('LLM_Runlog.csv', mode='a', index=False, header=False)
+
+            if tts_flag:
+                audio_response = client.audio.speech.create(
+                    model="tts-1",
+                    voice="nova",
+                    input=answer
+                )
+                audio_response.write_to_file("llm_answer.mp3")
+                with open("llm_answer.mp3", "rb") as audio_file:
+                    st.audio(audio_file, format='audio/mp3')
 
 
