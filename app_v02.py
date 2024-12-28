@@ -610,7 +610,7 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
             elapsed_time = datetime.now() - START_TIME
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
-            pd.DataFrame([[datetime.now(),f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}",query_llm,filter_llm_month,filter_llm_prod,"Group Placeholder",answer]]).to_csv('LLM_Runlog.csv', mode='a', index=False, header=False)
+            #pd.DataFrame([[datetime.now(),f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}",query_llm,filter_llm_month,filter_llm_prod,"Group Placeholder",answer]]).to_csv('LLM_Runlog.csv', mode='a', index=False, header=False)
 
             if tts_flag:
                 audio_response = client.audio.speech.create(
