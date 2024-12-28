@@ -158,38 +158,45 @@ def plot_chart_1(group_var, title, desc, data):
     # Create empty chart object
     fig = go.Figure()
 
-    #prods = ["🔥 Gas Products", "⚡ Energy", "💧 Plumbing & Drains",
-    #         "📺 Appliance Repair"]  # data_grouped["Final Product Category"].unique().tolist()
-    #prods = ["Gas Products", "Energy", "Plumbing & Drains", "Appliance Repair"]  # data_grouped["Final Product Category"].unique().tolist()
     prods = data_grouped["Final Product Category"].unique().tolist()
 
     # Separate projected data
     if 'Projected' not in data_grouped:
         data_grouped["Projected"] = 0
 
-    actual_data = data_grouped[data_grouped["Projected"] != 1]
-    projected_data = data_grouped[data_grouped["Projected"] == 1]
-
     # Create a line for each product
     for product in prods:
-        df_prod_act = data_grouped[data_grouped['Final Product Category'] == product].copy()
-        df_prod_proj = projected_data[projected_data['Final Product Category'] == product].copy()
+        df_prod = data_grouped[data_grouped['Final Product Category'] == product]
+        df_prod_act = df_prod[df_prod['Projected'] != 1]
+        df_prod_pred = df_prod[df_prod['Projected'] == 1]
+
+        # Ensure continuity between actual and predicted
+        if not df_prod_act.empty and not df_prod_pred.empty:
+            last_actual_row = df_prod_act.iloc[[-1]]  # Get the last row of actual data
+            df_prod_pred = pd.concat([last_actual_row, df_prod_pred])
+
         fig.add_trace(
             go.Scatter(
                 x=df_prod_act['Year-Month'], y=df_prod_act[group_var],
-                mode='lines+markers', name=product,
+                mode='lines+markers', name=product_emoji_map[product],
                 line=dict(color=product_colours[product], width=1),
                 hovertemplate=("<b>Sentiment Score:</b> %{y:.2f}<br>")
             )
         )
-        # fig.add_trace(
-        #     go.Scatter(
-        #         x=df_prod_proj['Year-Month'], y=df_prod_proj[group_var],
-        #         mode='text', name=product,
-        #         line=dict(color=product_colours[product], width=1),
-        #         hovertemplate=("<i>This is a Projected Value</i>")
-        #     )
-        # )
+
+        # Add predicted data as dashed line
+        if not df_prod_pred.empty:
+            fig.add_trace(
+                go.Scatter(
+                    x=df_prod_pred['Year-Month'], y=df_prod_pred[group_var],
+                    mode='lines+markers', name=f"{product_emoji_map[product]} (Predicted)",
+                    line=dict(color=product_colours[product], width=2, dash='dot'),
+                    marker=dict(symbol='circle-open', size=10),
+                    hovertemplate="<i>Predicted Value</i>: %{y:.2f}<br>",
+                    showlegend=False,
+                )
+            )
+
 
     # Add chart labelling
     fig.update_layout(
