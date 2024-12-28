@@ -289,7 +289,7 @@ if lob_filter == "🚁 Overview":
         st.markdown("## Overall Sentiment Summary")
         st.write("""
         Below is a high-level view of our **Promoters**, **Detractors**, and **Emerging Trends** based on the 
-        latest loaded CSV data. You can see the distribution of each category in the treemaps below, followed by 
+        latest AI generated themes from social media, discussion forums, and any available online reviews. You can see the distribution of each category in the treemaps below, followed by 
         brief descriptions summarizing each sub-topic (e.g., 'Engineer Experience' for Promoters, or 'Billing Errors' 
         for Detractors).
         """)
