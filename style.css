@@ -21,6 +21,18 @@ section[data-testid="stSidebar"] {
     color: #012973;
 }
 
+.rounded-block {
+    border: 3px solid #0490d7; /* Border color */
+    border-radius: 15px; /* Rounded corners */
+    padding: 20px; /* Padding inside the block */
+    box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3); /* 3D shadow effect */
+    margin-bottom: 20px; /* Spacing between blocks */
+    margin-left: 5px; /* Spacing between blocks */
+    margin-right: 5px; /* Spacing between blocks */
+    background-color: #f9f9f9; /* Background color */
+    text-align: center; /* Center align text */
+}
+
 /* Tabs styling */
 .stTabs [data-baseweb="tab-list"] {
     gap: 2px;
