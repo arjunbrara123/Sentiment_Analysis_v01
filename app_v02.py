@@ -19,10 +19,6 @@ st.set_page_config(
 
 START_TIME = datetime.now()
 
-input_SA_Monthly_data = "BG_SA_Monthly_Data.csv" #"BG_LLM_Test_Output_01.csv"
-input_Raw_Comments_Text_data = "BG_cleaned_reviews_data.csv"
-input_LLM_Tabs_Summary_data = "BG_LLM_summary_data.csv"
-
 # Load and inject CSS
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -59,44 +55,33 @@ def load_agg_data(input_filepath):
         print(f"Error encountered: {e}")
         return 0
 
-data_BG = load_agg_data(input_SA_Monthly_data)
-
-data=data_BG
-
-tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
-reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
-
-insight_list = tab_data["Type"].unique().tolist()
-
 # Create a container with a white background for the sidebar controls
-
-
 with st.sidebar:
     st.sidebar.image("company_logo.png")
     st.sidebar.markdown(f"**Current User:** {getuser()}")
-    st.markdown(
-        """
-        <style>
-        .custom-container {
-            background-color: white;
-            padding: 15px;
-            border-radius: 10px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .custom-container label {
-            color: black !important;
-            font-weight: bold;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+
+    with st.expander("🏫 Select Company", expanded=False):
+        selected_company = st.radio(
+            "Please Select a Company",
+            options=["British Gas", "HomeServe"],
+            index=0
+        )
+
+    input_LLM_Tabs_Summary_data = "LLM Summary Data " + selected_company + ".csv"
+    input_SA_Monthly_data = "SA Monthly Data " + selected_company + ".csv"
+    input_Raw_Comments_Text_data = "BG_cleaned_reviews_data.csv"
+
+    data = load_agg_data(input_SA_Monthly_data)
+    tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
+    reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
+    insight_list = tab_data["Type"].unique().tolist()
+
 
     with st.expander("🕵️ Insight Mode", expanded=True):
         lob_filter = st.radio(
-            "Select Insight",
+            "Please Select an Insights Mode",
             options=["🚁 Overview"] + insight_list + ["💁‍♀️ Ask Alice..."],
-            index=1,
+            index=0,
             help="Select an option to change the grouping of tabs displayed on the main window"
         )
 
@@ -114,7 +99,6 @@ with st.sidebar:
         )
 
         min_date = pd.to_datetime(data['Year-Month'].min(), format='%Y%m').date()
-        #max_date = pd.to_datetime(data['Year-Month'].max(), format='%Y%m').date()
         max_date = projection_end_date if show_projections else data["Year-Month"].max().date()
 
         # Generate future projections dynamically
@@ -122,14 +106,13 @@ with st.sidebar:
 
             future_data_list = []  # Store projected data for each product type
 
-
             # Prepare numeric columns for regression
             numeric_columns = data.select_dtypes(include=[np.number]).columns.tolist()
 
             #!!!! Remove once moving to monthly csv
-            grouping_cols = ["Year-Month", "Final Product Category"]
-            monthly_data = data[grouping_cols + numeric_columns].groupby(grouping_cols).mean().reset_index()
-            data = monthly_data
+            #grouping_cols = ["Year-Month", "Final Product Category"]
+            #monthly_data = data[grouping_cols + numeric_columns].groupby(grouping_cols).mean().reset_index()
+            #data = monthly_data
 
             # Label encode the Year-Month column for regression
             data["Month_Index"] = (data["Year-Month"] - data["Year-Month"].min()).dt.days // 30
@@ -163,7 +146,7 @@ with st.sidebar:
                 for col in numeric_columns:
                     # Prepare the model and data
                     X = product_data[["Month_Index"]]
-                    y = product_data[col] #.fillna(0)
+                    y = product_data[col]
                     if proj_method == "Holt-Winters (Recommended)":
                         model = ExponentialSmoothing(product_data[col], trend="add", seasonal=None, damped_trend=True)
                         fitted_model = model.fit()
@@ -190,13 +173,11 @@ with st.sidebar:
         else:
             combined_data = data
 
-        #combined_data.to_csv("test_123.csv")
-
         start_date, end_date = st.slider(
             "Select Time Period for Analysis:",
             min_value=min_date,
             max_value=max_date,
-            value=(data['Year-Month'].min().date(), data['Year-Month'].max().date()),
+            value=(combined_data['Year-Month'].min().date(), combined_data['Year-Month'].max().date()),
             help="Adjust the time range to filter the sentiment data.",
         )
 
@@ -206,45 +187,113 @@ with st.sidebar:
             (combined_data["Year-Month"] <= pd.Timestamp(end_date))
             ]
 
-    with st.expander("🏫 Select Company", expanded=False):
-        selected_company = st.radio(
-            "Select Company",
-            options=["British Gas", "HomeServe", "Domestic & General", "Corgi Homeplan", "247 Home Rescue", "Octopus", "Eon Energy","OVO Evergy"],
-            index=0
-        )
-
     with st.expander("⚙️ Settings", expanded=False):
         tts_flag = st.toggle("Alice Reads Responses Aloud", value=False)
 
-
-# Add custom CSS for rounded borders and shadows
-st.markdown("""
-    <style>
-    .rounded-block {
-        border: 3px solid #0490d7; /* Border color */
-        border-radius: 15px; /* Rounded corners */
-        padding: 20px; /* Padding inside the block */
-        box-shadow: 5px 5px 15px rgba(0, 0, 0, 0.3); /* 3D shadow effect */
-        margin-bottom: 20px; /* Spacing between blocks */
-        margin-left: 5px; /* Spacing between blocks */
-        margin-right: 5px; /* Spacing between blocks */
-        background-color: #f9f9f9; /* Background color */
-        text-align: center; /* Center align text */
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
+        print("3=================")
+        print(filtered_data.columns)
+        print(filtered_data.head())
+        print("3=================")
 
 # Dynamically display tabs based on the selected option
 if lob_filter == "🚁 Overview":
 
     # We create two sub-tabs for the Overview
-    overview_tabs = st.tabs(["📚 User Guide", "🚁 Summary", "😭 Emotional Breakdown", "🧪 Lapse Predictors"])
+    overview_tabs = st.tabs(["🚁 Summary", "🧪 Lapse Analysis", "📚 User Guide"])
 
-    # ---------------------------- #
-    # 0. USER GUIDE TAB
-    # ---------------------------- #
+    # 1. SUMMARY TAB
     with overview_tabs[0]:
+        st.markdown("## Overall Sentiment Summary")
+
+        # Sentiment Score by Product over Time
+        plot_chart_1(
+            "Sentiment Score",
+            "Sentiment Score by Product Over Time",
+            "text",
+            filtered_data  # Ensure your data is loaded and available
+        )
+
+        st.write("""
+        Below is a high-level view of our **Promoters**, **Detractors**, and **Emerging Trends** based on the 
+        latest AI generated themes from social media, discussion forums, and any available online reviews. You can see the distribution of each category in the treemaps below, followed by 
+        brief descriptions summarizing each sub-topic (e.g., 'Engineer Experience' for Promoters, or 'Billing Errors' 
+        for Detractors).
+        """)
+
+        if "Percentage" in tab_data.columns:
+            tab_data.loc[tab_data.index, "Percentage"] = tab_data["Percentage"].str.replace("%", "", regex=False).astype(float)
+
+        # Separate out the three main categories from tab_data
+        overview_categories = {
+            "Promoters": {"icon": "🥳", "filter": "Promoters"},
+            "Detractors": {"icon": "🤬", "filter": "Detractors"},
+            "Emerging Trends": {"icon": "👽", "filter": "Emerging"},
+        }
+
+        # Create three columns for Promoters, Detractors, Emerging Trends
+        cols = st.columns(len(overview_categories))
+
+        # Loop through each category and process data
+        for i, (category, details) in enumerate(overview_categories.items()):
+            cat_data = tab_data[tab_data["Type"].str.contains(details["filter"], case=False, na=False)]
+
+            with cols[i]:
+                st.markdown(f"### {details['icon']} {category}")
+
+                if not cat_data.empty:
+                    # Create treemap
+                    fig_treemap = px.treemap(
+                        cat_data,
+                        path=["Tab Headline"],
+                        values="Percentage",
+                        color="Percentage",
+                        title=""
+                    )
+                    fig_treemap.update_layout(
+                        margin=dict(l=10, r=10, t=40, b=10),
+                        template="plotly_white"
+                    )
+                    st.plotly_chart(fig_treemap, use_container_width=True)
+
+                    # Summarize each row dynamically
+                    for _, row in cat_data.iterrows():
+                        st.markdown(f"**{row['Tab Emoji']} {row['Tab Headline']} ~{int(row['Percentage'])}%**")
+                        st.write(f"{row['Tab Description']}")
+                else:
+                    st.write(f"No {category} data available.")
+
+        # Optional: Additional placeholders or summaries below the three columns
+        st.markdown("---")
+        st.markdown("### Additional Comments")
+        st.write("""
+        - Use the **Promoters** data to reinforce what's going well and replicate success across the business.
+        - Address key concerns highlighted in the **Detractors** data with urgency to maintain brand reputation.
+        - Keep a close eye on **Emerging Trends** to stay ahead of shifting sentiment and industry developments.
+
+        This overview provides a snapshot of what’s driving customer happiness, frustration, and future risk factors.
+        For deeper analysis, explore the specific insight modes in the sidebar or ask a custom question via **Ask Alice**.
+        """)
+
+    with overview_tabs[1]:
+        st.markdown("""
+        # Lapse Rate Analysis
+        """, unsafe_allow_html=True)
+
+        print("4=================")
+        print(filtered_data.columns)
+        print(filtered_data.head())
+        print("4=================")
+
+        # Tab 1 Chart 1: Sentiment Score by Product over Time
+        plot_chart_1(
+            "Lapse Probability",
+            "Cancellation Sentiment by Product Over Time",
+            "text",
+            filtered_data  # Ensure your data is loaded and available
+        )
+
+    # 4. USER GUIDE TAB
+    with overview_tabs[2]:
         st.markdown("## User Guide")
 
         st.markdown("""
@@ -255,7 +304,7 @@ if lob_filter == "🚁 Overview":
         """, unsafe_allow_html=True)
 
         st.write("""
-        
+
         Here's how to use each section:
 
         **1. Insight Mode**  
@@ -282,165 +331,6 @@ if lob_filter == "🚁 Overview":
         We hope this guide helps you navigate and leverage the dashboard effectively!
         """)
 
-    # ---------------------------- #
-    # 1. SUMMARY TAB
-    # ---------------------------- #
-    with overview_tabs[1]:
-        st.markdown("## Overall Sentiment Summary")
-        st.write("""
-        Below is a high-level view of our **Promoters**, **Detractors**, and **Emerging Trends** based on the 
-        latest AI generated themes from social media, discussion forums, and any available online reviews. You can see the distribution of each category in the treemaps below, followed by 
-        brief descriptions summarizing each sub-topic (e.g., 'Engineer Experience' for Promoters, or 'Billing Errors' 
-        for Detractors).
-        """)
-
-        if "Percentage" in tab_data.columns:
-            tab_data.loc[tab_data.index, "Percentage"] = tab_data["Percentage"].str.replace("%", "", regex=False).astype(float)
-
-        # Separate out the three main categories from tab_data
-        promoters = tab_data[tab_data["Type"].str.contains("Promoters", case=False, na=False)]
-        detractors = tab_data[tab_data["Type"].str.contains("Detractors", case=False, na=False)]
-        emerging = tab_data[tab_data["Type"].str.contains("Emerging", case=False, na=False)]
-
-        # Create three columns for Promoters, Detractors, Emerging Trends
-        col1, col2, col3 = st.columns(3)
-
-        # ----------------------- #
-        # Column 1: PROMOTERS
-        # ----------------------- #
-        with col1:
-            st.markdown("### 🥳 Promoters")
-            if not promoters.empty:
-
-                fig_promoters_treemap = px.treemap(
-                    promoters,
-                    path=["Tab Headline"],  # or path=["Type","Tab Headline"] if you want the hierarchy
-                    values="Percentage",
-                    color="Percentage",  # or color="Tab Headline" for category-based colors
-                    title=""
-                )
-                # Keep margins tight for a narrow column
-                fig_promoters_treemap.update_layout(
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    template="plotly_white"
-                )
-                st.plotly_chart(fig_promoters_treemap, use_container_width=True)
-
-                #st.write("**Promoters Overview**")
-                # Summarize each Promoter row dynamically
-                for i, row in promoters.iterrows():
-                    st.markdown(f"**{row['Tab Emoji']} {row['Tab Headline']} ~{int(row['Percentage'])}%**")
-                    st.write(f"{row['Tab Description']}")
-
-            else:
-                st.write("No Promoter data available.")
-
-        # ----------------------- #
-        # Column 2: DETRACTORS
-        # ----------------------- #
-        with col2:
-            st.markdown("### 🤬 Detractors")
-            if not detractors.empty:
-
-                fig_detractors_treemap = px.treemap(
-                    detractors,
-                    path=["Tab Headline"],
-                    values="Percentage",
-                    color="Percentage",
-                    title=""
-                )
-                fig_detractors_treemap.update_layout(
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    template="plotly_white"
-                )
-                st.plotly_chart(fig_detractors_treemap, use_container_width=True)
-
-                for i, row in detractors.iterrows():
-                    st.markdown(f"**{row['Tab Emoji']} {row['Tab Headline']} ~{int(row['Percentage'])}%**")
-                    st.write(f"{row['Tab Description']}")
-
-            else:
-                st.write("No Detractor data available.")
-
-        # ---------------------------- #
-        # Column 3: EMERGING TRENDS
-        # ---------------------------- #
-        with col3:
-            st.markdown("### 👽 Emerging Trends")
-            if not emerging.empty:
-
-                fig_emerging_treemap = px.treemap(
-                    emerging,
-                    path=["Tab Headline"],
-                    values="Percentage",
-                    color="Percentage",
-                    title=""
-                )
-                fig_emerging_treemap.update_layout(
-                    margin=dict(l=10, r=10, t=40, b=10),
-                    template="plotly_white"
-                )
-                st.plotly_chart(fig_emerging_treemap, use_container_width=True)
-
-                for i, row in emerging.iterrows():
-                    st.markdown(f"**{row['Tab Emoji']} {row['Tab Headline']} ~{int(row['Percentage'])}%**")
-                    st.write(f"{row['Tab Description']}")
-
-            else:
-                st.write("No Emerging Trends data available.")
-
-        # Optional: Additional placeholders or summaries below the three columns
-        st.markdown("---")
-        st.markdown("### Additional Comments")
-        st.write("""
-        - Use the **Promoters** data to reinforce what's going well and replicate success across the business.
-        - Address key concerns highlighted in the **Detractors** data with urgency to maintain brand reputation.
-        - Keep a close eye on **Emerging Trends** to stay ahead of shifting sentiment and industry developments.
-
-        This overview provides a snapshot of what’s driving customer happiness, frustration, and future risk factors.
-        For deeper analysis, explore the specific insight modes in the sidebar or ask a custom question via **Ask Alice**.
-        """)
-
-    with overview_tabs[2]:
-        st.markdown("""
-        # Emotional Insights Breakdown
-        """, unsafe_allow_html=True)
-
-        # Overview Text
-        st.markdown("""
-        ### Overview
-        This tab dives deeper into individual emotions, providing detailed insights for each emotion across products and time:
-        - 📈 Visualize monthly trends for each emotion across different product categories, helping identify key patterns.
-        - 🌨️ Explore word clouds that reveal top keywords driving each emotion, filtered for relevance.
-        - 🔎 Insights into how each emotion drives customer behaviour for each product group, such as retention analysis
-    
-        These analyses provide actionable insights into customer experiences and emotions, enabling focused improvements and retention strategies.
-    
-        <hr style="border: 1px solid #0490d7; margin: 20px 0;">
-        """, unsafe_allow_html=True)
-
-        # Tab 1 Chart 1: Sentiment Score by Product over Time
-        plot_chart_1(
-            "Sentiment Score",
-            "Sentiment Score by Product Over Time",
-            "text",
-            filtered_data  # Ensure your data is loaded and available
-        )
-
-    # === Retention Analysis Tab ===
-    with overview_tabs[3]:
-        st.markdown("""
-        # Lapse Rate Analysis
-        """, unsafe_allow_html=True)
-
-        # Tab 1 Chart 1: Sentiment Score by Product over Time
-        plot_chart_1(
-            "Lapse Probability",
-            "Cancellation Sentiment by Product Over Time",
-            "text",
-            filtered_data  # Ensure your data is loaded and available
-        )
-
 elif lob_filter in insight_list:
     # Filter for Promoters
     insight_tabs = tab_data[tab_data["Type"] == lob_filter]
@@ -454,21 +344,30 @@ elif lob_filter in insight_list:
             # Get the data for the current tab
             row = insight_tabs.iloc[idx]
 
-            # # Filter data based on the selected range
-            # filtered_data = combined_data[
-            #     (combined_data["Year-Month"] >= pd.Timestamp(start_date)) &
-            #     (combined_data["Year-Month"] <= pd.Timestamp(end_date))
-            #     ]
-
             # Display the main title and description
             st.markdown(
                 f"<div style='font-size: 35px; text-align: center; color: #012973; margin-bottom: 10px;'><b>{row['Tab Emoji']} {row['Tab Headline']}</b><br></div>",
                 unsafe_allow_html=True
             )
+
             st.markdown(
-                f"<div style='text-align: center; color: #012973;'>{row['Tab Description']}<br><br><br></div>",
+                f"<div style='text-align: center; color: #012973;'>{row['Tab Description']}<br></div>",
                 unsafe_allow_html=True
             )
+
+            # Display the chart
+            plot_chart_1(
+                row["Chart Column"],
+                row["Chart Title"],
+                "text",
+                filtered_data  # Ensure your data is loaded and available
+            )
+
+            # Display chart analysis
+            st.write(row["Chart Analysis"])
+
+            # Add another divider
+            st.markdown("<hr>", unsafe_allow_html=True)
 
             # Display Sentiment Summary and Recommended Actions in two columns
             col1, col2 = st.columns([2, 2])
@@ -489,20 +388,6 @@ elif lob_filter in insight_list:
                 )
 
             # Add a divider
-            st.markdown("<hr>", unsafe_allow_html=True)
-
-            # Display the chart
-            plot_chart_1(
-                row["Chart Column"],
-                row["Chart Title"],
-                "text",
-                filtered_data  # Ensure your data is loaded and available
-            )
-
-            # Display chart analysis
-            st.write(row["Chart Analysis"])
-
-            # Add another divider
             st.markdown("<hr>", unsafe_allow_html=True)
 
             # Display Key Drivers dynamically
@@ -610,7 +495,7 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
             elapsed_time = datetime.now() - START_TIME
             hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
             minutes, seconds = divmod(remainder, 60)
-            #pd.DataFrame([[datetime.now(),f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}",query_llm,filter_llm_month,filter_llm_prod,"Group Placeholder",answer]]).to_csv('LLM_Runlog.csv', mode='a', index=False, header=False)
+            pd.DataFrame([[datetime.now(),f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}",query_llm,filter_llm_month,filter_llm_prod,"Group Placeholder",answer]]).to_csv('LLM_Runlog.csv', mode='a', index=False, header=False)
 
             if tts_flag:
                 audio_response = client.audio.speech.create(
