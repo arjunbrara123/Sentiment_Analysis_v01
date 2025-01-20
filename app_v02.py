@@ -69,7 +69,7 @@ with st.sidebar:
 
     input_LLM_Tabs_Summary_data = "LLM Summary Data " + selected_company + ".csv"
     input_SA_Monthly_data = "SA Monthly Data " + selected_company + ".csv"
-    input_Raw_Comments_Text_data = "BG_cleaned_reviews_data.csv"
+    input_Raw_Comments_Text_data = "Cleaned Reviews " + selected_company + ".csv"
 
     data = load_agg_data(input_SA_Monthly_data)
     tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
@@ -437,20 +437,20 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
     filtered_reviews = filtered_reviews[
         filtered_reviews["Final Product Category"] == filter_llm_prod][:1000].values.tolist()
 
-    OPENAI_SYSTEM_PROMPT = """
-    You are a customer experience expert at British Gas Insurance. 
+    OPENAI_SYSTEM_PROMPT = f"""
+    You are a customer experience expert at {selected_company} Insurance. 
     You speak in a warm, friendly, and conversational tone, occasionally adding light humor or puns to keep engagement high. 
     Your task is to analyse the company's social media data to provide well-reasoned, data-driven insights. 
     Focus on the biggest themes or commonalities between a large volume of comments as opposed to relying or referencing any one specific comment, unless there is one comment which is interesting and representative of how a very large number of comments feel.
-    Remember the audience is British Gas senior members, so try and phrase things that doesn't show the company in an overly negative light or in a way that might offend anyone.
+    Remember the audience is {selected_company} senior members, so try and phrase things that doesn't show the company in an overly negative light or in a way that might offend anyone.
     When you answer a question, do the following:
 
     1. Summarise the key data points from the social media context that support your answer, accounting for what product line it is too.
     2. Provide 2-3 concrete, actionable recommendations for the business, explaining briefly why these recommendations follow from the data and given product line.
     3. Use a short concluding paragraph or bullet points to tie everything together. 
-    4. If the data is insufficient to answer the question, or the question is not relevant to British Gas, politely say so and explain why.
+    4. If the data is insufficient to answer the question, or the question is not relevant to {selected_company}, politely say so and explain why.
 
-    Always keep the conversation focused on British Gas Insurance, and ensure the user knows all your recommendations are rooted in the data you've been given.
+    Always keep the conversation focused on {selected_company} Insurance, and ensure the user knows all your recommendations are rooted in the data you've been given.
     """
     def llm_inference(query, context):
         try:
