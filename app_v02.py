@@ -1,4 +1,4 @@
-# Import required packages
+    # Import required packages
 from charts import *
 from getpass import getuser
 from sklearn.linear_model import LinearRegression
@@ -419,7 +419,7 @@ elif lob_filter == "💁‍♀️ Ask Alice...":
     with col2:
         filter_llm_prod = st.selectbox(
             "Please select a specific product group",
-            ("Gas Products", "Energy", "Plumbing & Drains", "Appliance Repair"),
+            reviews_data["Final Product Category"].unique(),
         )
     with col3:
         filter_llm_type = st.selectbox(
