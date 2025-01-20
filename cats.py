@@ -21,6 +21,7 @@ emotion_categories = list(emotion_colours.keys())
 product_colours = {
     'Energy': 'orange',
     'Appliance Repair': 'maroon',
+    'Home Electrical': 'maroon',
     'Gas Products': 'green',
     'Plumbing & Drains': 'magenta',
     'Unknown': 'grey'
@@ -29,7 +30,9 @@ product_emoji_map = {
     "Gas Products": "🚿 Gas Products",
     "Energy": "⚡ Energy",
     "Plumbing & Drains": "🪠 Plumbing & Drains",
-    "Appliance Repair": "📺 Appliance Repair"
+    "Appliance Repair": "📺 Appliance Repair",
+    "Home Electrical": "📺 Home Electrical",
+    "Unknown": "🃏 Unknown"
 }
 product_categories = list(product_colours.keys())
 energy_colours = {
