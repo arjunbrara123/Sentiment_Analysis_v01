@@ -52,11 +52,12 @@ insurer_colours = {
     'Corgi HomePlan': 'orange',
     '247 Home Rescue': 'brown'
 }
-aspects = [
-    "Appointment Scheduling",
-    "Customer Service",
-    "Response Speed",
-    "Engineer Experience",
-    "Solution Quality",
-    "Value For Money",
-]
+aspects_map = {
+    "Appointment Scheduling": "⌚ Appointment Scheduling",
+    "Customer Service": "☎️ Customer Service",
+    "Response Speed": "🎽 Response Speed",
+    "Engineer Experience": "🧑‍🔧 Engineer Experience",
+    "Solution Quality": "🥇 Solution Quality",
+    "Value For Money": "💶 Value For Money",
+}
+aspects = list(aspects_map.keys())
