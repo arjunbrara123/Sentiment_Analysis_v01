@@ -260,7 +260,13 @@ def plot_chart_2(product, title, desc, data):
         xaxis_title="Month & Year",
         yaxis_title="Sentiment Score",
         legend_title="Service Aspects",
-        showlegend = True
+        legend=dict(
+            orientation="h",  # Horizontal legend
+            yanchor="top",
+            y=-0.2,  # Position below the chart
+            xanchor="center",
+            x=0.5
+        )
     )
 
     fig = style_chart(fig)  # Apply styling
