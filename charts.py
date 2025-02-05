@@ -248,7 +248,7 @@ def plot_chart_2(product, title, desc, data):
                 x=data_grouped["Year-Month"],
                 y=data_grouped[aspect_column],
                 mode="lines+markers",
-                name=aspect,  # Legend will display the aspect name
+                name=aspects_map[aspect],  # Legend will display the aspect name
                 hovertemplate=f"<b>{aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
                 line=dict(width=2)  # Keep the lines clean and simple
             )
