@@ -31,7 +31,8 @@ product_emoji_map = {
     "Energy": "⚡ Energy",
     "Plumbing & Drains": "🪠 Plumbing & Drains",
     "Appliance Repair": "📺 Appliance Repair",
-    "Home Electrical": "📺 Home Electrical",
+    "Home Electrical": "🔦 Home Electrical",
+    "Heating": "🔥 Heating",
     "Unknown": "🃏 Unknown"
 }
 product_categories = list(product_colours.keys())
@@ -41,7 +42,8 @@ energy_colours = {
     'Eon Next': 'red',
     'Octopus': 'pink',
     'OVO': 'green',
-    'Scottish Power': 'lime'
+    'Scottish Power': 'lime',
+    'Unknown': 'grey'
 }
 insurer_colours = {
     'British Gas': 'blue',
@@ -50,4 +52,11 @@ insurer_colours = {
     'Corgi HomePlan': 'orange',
     '247 Home Rescue': 'brown'
 }
-
+aspects = [
+    "Appointment Scheduling",
+    "Customer Service",
+    "Response Speed",
+    "Engineer Experience",
+    "Solution Quality",
+    "Value For Money",
+]
