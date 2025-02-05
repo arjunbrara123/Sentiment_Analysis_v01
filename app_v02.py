@@ -141,14 +141,15 @@ if analysis_mode == "🚁 Overview":
             st.write("No summary available for the selected company and product.")
 
         # Plot sentiment graph for the selected company and product
-        print(sa_monthly_data.head())
         filtered_data_left = sa_monthly_data[
             (sa_monthly_data["Company"].str.contains(company_name)) &
             (sa_monthly_data["Final Product Category"].str.contains(product_name))
         ]
-        print(filtered_data_left.head())
         if not filtered_data_left.empty:
-            st.markdown("### Sentiment Trends Over Time")
+
+            # Add another divider
+            st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+            #st.markdown("### Sentiment Trends Over Time")
             plot_chart_2(product_name, product_name + " by Aspect", "", filtered_data_left)
         else:
             st.write("No sentiment data available for the selected company and product.")
@@ -169,8 +170,10 @@ if analysis_mode == "🚁 Overview":
                 ]
             # Plot sentiment graph for British Gas
             if not filtered_data_right.empty:
-                st.markdown("### Sentiment Trends Over Time")
-                plot_chart_2(product_name, "British Gas by Aspect", "", filtered_data_right)
+                # Add another divider
+                st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+                #st.markdown("### Sentiment Trends Over Time")
+                plot_chart_2(product_name, f"BG {product_name} by Aspect", "", filtered_data_right)
             else:
                 st.write("No sentiment data available for British Gas.")
 
