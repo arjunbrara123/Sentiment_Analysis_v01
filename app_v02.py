@@ -1,4 +1,5 @@
 # Import required packages
+import charts
 from charts import *
 from getpass import getuser
 from sklearn.linear_model import LinearRegression
@@ -148,16 +149,7 @@ if analysis_mode == "🚁 Overview":
         print(filtered_data_left.head())
         if not filtered_data_left.empty:
             st.markdown("### Sentiment Trends Over Time")
-            selected_metric = st.selectbox("Pick a metric to show", (
-                    "Appointment Scheduling",
-                    "Customer Service",
-                    "Response Speed",
-                    "Engineer Experience",
-                    "Solution Quality",
-                    "Value For Money"
-            )) + "_sentiment_score"
-            plot_chart_1(selected_metric, selected_metric.split('_', 1)[0], "text", filtered_data_left)
-
+            plot_chart_2(product_name, product_name + " by Aspect", "", filtered_data_left)
         else:
             st.write("No sentiment data available for the selected company and product.")
 
@@ -169,6 +161,19 @@ if analysis_mode == "🚁 Overview":
                 st.write(british_gas_summary[0])
             else:
                 st.write("No British Gas summary available for the selected product.")
+
+            # Filter sentiment data for British Gas and the same product
+            filtered_data_right = sa_monthly_data[
+                (sa_monthly_data["Company"].str.contains("British Gas")) &
+                (sa_monthly_data["Final Product Category"].str.contains(product_name))
+                ]
+            # Plot sentiment graph for British Gas
+            if not filtered_data_right.empty:
+                st.markdown("### Sentiment Trends Over Time")
+                plot_chart_2(product_name, "British Gas by Aspect", "", filtered_data_right)
+            else:
+                st.write("No sentiment data available for British Gas.")
+
         else:
             st.write("N/A (Selected company is British Gas)")
 
