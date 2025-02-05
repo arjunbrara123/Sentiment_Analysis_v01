@@ -208,3 +208,63 @@ def plot_chart_1(group_var, title, desc, data):
     fig = style_chart(fig)
     fig = add_red_line(fig)
     st.plotly_chart(fig, use_container_width=True)
+
+def plot_chart_2(product, title, desc, data):
+    """
+    Plots sentiment trends for different service aspects over time for a selected product.
+
+    Args:
+        product (str): The product category to filter the data.
+        title (str): Title of the chart.
+        desc (str): Chart description (not currently used, but available for future expansion).
+        data (DataFrame): The full dataset containing sentiment scores.
+    """
+
+    # Define aspect sentiment score column names
+    aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects]
+
+    # Filter data for the selected product only
+    data_filtered = data[data["Final Product Category"] == product]
+
+    # Ensure we have valid data
+    if data_filtered.empty:
+        st.warning(f"No data available for {product}. Please select a different product.")
+        return
+
+    # Group by time (Year-Month) and calculate mean sentiment scores for each aspect
+    data_grouped = data_filtered.groupby("Year-Month", as_index=False)[aspect_columns].mean()
+    data_grouped['Year-Month'] = pd.to_datetime(data_grouped['Year-Month'], format='%d/%m/%Y', errors='raise')
+
+    # Sort by chronological order
+    data_grouped = data_grouped.sort_values("Year-Month")
+
+    # Create a Plotly figure
+    fig = go.Figure()
+
+    # Add a line trace for each aspect
+    for aspect, aspect_column in zip(aspects, aspect_columns):
+        fig.add_trace(
+            go.Scatter(
+                x=data_grouped["Year-Month"],
+                y=data_grouped[aspect_column],
+                mode="lines+markers",
+                name=aspect,  # Legend will display the aspect name
+                hovertemplate=f"<b>{aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
+                line=dict(width=2)  # Keep the lines clean and simple
+            )
+        )
+
+    # Update chart aesthetics using the existing style function
+    fig.update_layout(
+        title=title,
+        xaxis_title="Month & Year",
+        yaxis_title="Sentiment Score",
+        legend_title="Service Aspects",
+        showlegend = True
+    )
+
+    fig = style_chart(fig)  # Apply styling
+    fig = add_red_line(fig)  # Add reference line at y=0
+
+    # Display the chart
+    st.plotly_chart(fig, use_container_width=True)
