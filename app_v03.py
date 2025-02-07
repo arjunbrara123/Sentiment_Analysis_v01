@@ -88,12 +88,12 @@ with st.sidebar:
 
     company_name = selected_company.split(' ', 1)[-1]
     product_name = selected_product.split(' ', 1)[-1]
-    #input_LLM_Tabs_Summary_data = "LLM Summary " + company_name + ".csv"
+    input_LLM_Tabs_Summary_data = "LLM Summary " + "British Gas.csv" #+ company_name + ".csv"
     #input_SA_Monthly_data = "SA Monthly Data " + company_name + ".csv"
     input_Raw_Comments_Text_data = "Cleaned Reviews " + company_name + ".csv"
 
     #data = load_agg_data(input_SA_Monthly_data)
-    #tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
+    tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
     #insight_list = tab_data["Type"].unique().tolist()
     reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
 
@@ -140,20 +140,6 @@ if analysis_mode == "🚁 Overview":
         else:
             st.write("No summary available for the selected company and product.")
 
-        # Plot sentiment graph for the selected company and product
-        filtered_data_left = sa_monthly_data[
-            (sa_monthly_data["Company"].str.contains(company_name)) &
-            (sa_monthly_data["Final Product Category"].str.contains(product_name))
-        ]
-        if not filtered_data_left.empty:
-
-            # Add another divider
-            st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
-            #st.markdown("### Sentiment Trends Over Time")
-            plot_chart_2(product_name, product_name + " by Aspect", "", filtered_data_left)
-        else:
-            st.write("No sentiment data available for the selected company and product.")
-
     # Right Column: British Gas Summary (or blank if British Gas is selected)
     with col2:
         st.markdown(f"### Equivalent BG Product Comparison")
@@ -163,6 +149,36 @@ if analysis_mode == "🚁 Overview":
             else:
                 st.write("No British Gas summary available for the selected product.")
 
+        else:
+            st.write("N/A (Selected company is British Gas)")
+
+    # Add divider
+    st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+
+    # Create two columns for side-by-side display
+    col1, col2 = st.columns(2)
+
+    # Left Column: Selected Company's Summary
+    with col1:
+        #st.markdown(f"### {company_name} - {selected_product}")
+
+        # Plot sentiment graph for the selected company and product
+        filtered_data_left = sa_monthly_data[
+            (sa_monthly_data["Company"].str.contains(company_name)) &
+            (sa_monthly_data["Final Product Category"].str.contains(product_name))
+        ]
+        if not filtered_data_left.empty:
+
+            #st.markdown("### Sentiment Trends Over Time")
+            plot_chart_2(product_name, company_name + " " + product_name + " Sentiment", "", filtered_data_left)
+        else:
+            st.write("No sentiment data available for the selected company and product.")
+
+    # Right Column: British Gas Summary (or blank if British Gas is selected)
+    with col2:
+        #st.markdown(f"### Equivalent BG Product Comparison")
+        if "British Gas" not in selected_company:
+
             # Filter sentiment data for British Gas and the same product
             filtered_data_right = sa_monthly_data[
                 (sa_monthly_data["Company"].str.contains("British Gas")) &
@@ -170,15 +186,25 @@ if analysis_mode == "🚁 Overview":
                 ]
             # Plot sentiment graph for British Gas
             if not filtered_data_right.empty:
-                # Add another divider
-                st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+
                 #st.markdown("### Sentiment Trends Over Time")
-                plot_chart_2(product_name, f"BG {product_name} by Aspect", "", filtered_data_right)
+                plot_chart_2(product_name, f"vs BG {product_name} Sentiment Score", "", filtered_data_right)
             else:
                 st.write("No sentiment data available for British Gas.")
 
         else:
             st.write("N/A (Selected company is British Gas)")
+
+    # Add divider
+    st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+
+    st.markdown("## Aspects")
+
+    promoters = tab_data[tab_data["Type"].str.contains("Promoter")]
+    for _, row in promoters.iterrows():
+        with st.expander(f"{row['Tab Emoji']} {row['Tab Headline']} ({row['Percentage']}%)"):
+            st.markdown(f"**Summary**\n{row['Sentiment Summary']}")
+            st.markdown(f"**Recommended Actions**\n{row['Recommended Actions']}")
 
 elif analysis_mode == "👽 Emerging Trends":
     st.markdown("## Emerging Customer Sentiment Trends")
