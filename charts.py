@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 from scipy.signal import savgol_filter
 from cats import *
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
-    
+
 # === Helper Functions ===
 # Smoothing function for charts
 def smooth_data(series, window=3, method='rolling_mean', polyorder=2):
@@ -147,9 +147,15 @@ def add_red_line(fig):
     return fig
 
 def plot_chart_1(group_var, title, desc, data):
+    """
+    Renders a chart based on the specified parameters.
 
-    # Ensure group var is numeric
-    #data[group_var] = pd.to_numeric(data[group_var], errors='coerce')
+    Args:
+        chart_column (str): Column name for chart data.
+        chart_title (str): Title of the chart.
+        chart_type (str): Type of the chart (e.g., 'text') - this is still in development
+        data (DataFrame): Data to visualize.
+    """
 
     # Aggregate data into grouping for plot
     numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
@@ -197,7 +203,6 @@ def plot_chart_1(group_var, title, desc, data):
                 )
             )
 
-
     # Add chart labelling
     fig.update_layout(
         title=title, #yaxis_range=[-0.99, 0.99],
@@ -221,7 +226,7 @@ def plot_chart_2(product, title, desc, data):
     """
 
     # Define aspect sentiment score column names
-    aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects]
+    aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
 
     # Filter data for the selected product only
     data_filtered = data[data["Final Product Category"] == product]
@@ -258,7 +263,7 @@ def plot_chart_2(product, title, desc, data):
     fig.update_layout(
         title=title,
         xaxis_title="Month & Year",
-        yaxis_title="Sentiment Score",
+        #yaxis_title="Sentiment Score",
         legend_title="Service Aspects",
         legend=dict(
             orientation="h",  # Horizontal legend
@@ -268,6 +273,9 @@ def plot_chart_2(product, title, desc, data):
             x=0.5
         )
     )
+
+    # Set the y-axis range to have a maximum of 95
+    fig.update_yaxes(range=[-60, 95])
 
     fig = style_chart(fig)  # Apply styling
     fig = add_red_line(fig)  # Add reference line at y=0
