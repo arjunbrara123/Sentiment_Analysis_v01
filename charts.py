@@ -282,3 +282,81 @@ def plot_chart_2(product, title, desc, data):
 
     # Display the chart
     st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_chart_3(product, aspect, title, desc, data):
+    """
+    Plots a multiline sentiment trend chart for a single service aspect over time,
+    where each line represents a competitor for the selected product.
+
+    Args:
+        product (str): The product category to filter the data.
+        aspect (str): The service aspect key (e.g., "Appointment Scheduling").
+        title (str): Title of the chart.
+        desc (str): Chart description (for future use).
+        data (DataFrame): The full dataset containing sentiment scores.
+    """
+    # Determine the sentiment column name for the specified aspect
+    sentiment_column = f"{aspect}_sentiment_score"
+
+    # Filter data for the selected product only
+    data_filtered = data[data["Final Product Category"] == product]
+    print(product)
+
+    # Check for valid data
+    if data_filtered.empty:
+        st.warning(f"No data available for {product}. Please select a different product.")
+        return
+
+    # Ensure 'Year-Month' is in datetime format and sort the data
+    data_filtered['Year-Month'] = pd.to_datetime(data_filtered['Year-Month'], format='%d/%m/%Y', errors='raise')
+    data_filtered = data_filtered.sort_values("Year-Month")
+
+    # Create a Plotly figure
+    fig = go.Figure()
+
+    # Get the list of all competitors in the filtered data
+    competitor_list = data_filtered["Company"].unique()
+
+    # For each competitor, group data by 'Year-Month' and calculate the mean sentiment score
+    for competitor in competitor_list:
+        competitor_data = data_filtered[data_filtered["Company"] == competitor]
+        competitor_grouped = competitor_data.groupby("Year-Month", as_index=False)[sentiment_column].mean()
+        competitor_grouped = competitor_grouped.sort_values("Year-Month")
+
+        # Add a trace for this competitor
+        fig.add_trace(
+            go.Scatter(
+                x=competitor_grouped["Year-Month"],
+                y=competitor_grouped[sentiment_column],
+                mode="lines+markers",
+                name=competitor,
+                hovertemplate=f"<b>{competitor} {aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
+                line=dict(width=2)
+            )
+        )
+
+    # Update chart layout to mimic plot_chart_2 styling
+    fig.update_layout(
+        title=title,
+        xaxis_title="Month & Year",
+        # yaxis_title="Sentiment Score",
+        legend_title="Competitors",
+        legend=dict(
+            orientation="h",  # Horizontal legend
+            yanchor="top",
+            y=-0.2,  # Position below the chart
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    # Set the y-axis range as before
+    fig.update_yaxes(range=[-60, 95])
+
+    # Apply existing styling functions (assumed to be defined elsewhere)
+    fig = style_chart(fig)
+    fig = add_red_line(fig)
+
+    # Display the chart in Streamlit
+    st.plotly_chart(fig, use_container_width=True)
