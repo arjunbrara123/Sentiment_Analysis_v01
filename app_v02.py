@@ -132,7 +132,7 @@ if mode == "🏢 Company Mode":
     st.markdown(f"**Selected Product Line:** {selected_product}")
 
     if analysis_mode == "🚁 Overview":
-        st.markdown("## Side-by-Side Product Overview")
+        #st.markdown("## Side-by-Side Product Overview")
 
         # Filter the summary for the selected company and product
         selected_summary = prod_summary_data[
@@ -151,7 +151,7 @@ if mode == "🏢 Company Mode":
 
         # Left Column: Selected Company's Summary
         with col1:
-            st.markdown(f"### {company_name} - {selected_product}")
+            #st.markdown(f"### {company_name} - {selected_product}")
             #if selected_summary.size > 0:
             st.markdown('## Strengths')
             st.write(selected_summary["Strengths"].values[0])
@@ -162,7 +162,7 @@ if mode == "🏢 Company Mode":
 
         # Right Column: British Gas Summary (or blank if British Gas is selected)
         with col2:
-            st.markdown(f"### Equivalent BG Product Comparison")
+            #st.markdown(f"### Equivalent BG Product Comparison")
             if "British Gas" not in selected_company:
                 # if british_gas_summary.size > 0:
                 #     st.write(british_gas_summary[0])
