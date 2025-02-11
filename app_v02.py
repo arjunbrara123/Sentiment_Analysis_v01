@@ -198,7 +198,7 @@ if mode == "🏢 Company Mode":
 
         # Add divider
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
-
+        st.markdown("## Sentiment Analytics")
         # When toggled on, it represents "Aspect View". When off, it represents "Sentiment View".
         chart_toggle = st.toggle("Split Sentiment Into Aspects", value=True,
                                  help="Toggle between Aspect View (all aspects) and Sentiment View (overall sentiment)")
@@ -227,7 +227,7 @@ if mode == "🏢 Company Mode":
             if not filtered_data_left.empty:
 
                 #st.markdown("### Sentiment Trends Over Time")
-                plot_chart_2(product_name, company_name + " " + product_name + " Sentiment", "", filtered_data_left, view)
+                plot_chart_2(product_name, company_name, "", filtered_data_left, view)
             else:
                 st.write("No sentiment data available for the selected company and product.")
 
@@ -255,7 +255,7 @@ if mode == "🏢 Company Mode":
                 if not filtered_data_right.empty:
 
                     #st.markdown("### Sentiment Trends Over Time")
-                    plot_chart_2(product_name, f"vs BG {product_name} Sentiment Score", "", filtered_data_right, view)
+                    plot_chart_2(product_name, f"British Gas", "", filtered_data_right, view)
                 else:
                     st.write("No sentiment data available for British Gas.")
 
