@@ -245,9 +245,7 @@ if mode == "🏢 Company Mode":
                         (sa_monthly_data["Company"].str.contains("British Gas")) &
                         (sa_monthly_data["Final Product Category"].str.contains(product_name))
                         ]
-                    print("Case 01")
                 else:
-                    print("Case e3")
                     filtered_data_right = sa_monthly_data[
                         (sa_monthly_data["Company"].str.contains("British Gas"))
                         ]
@@ -261,6 +259,48 @@ if mode == "🏢 Company Mode":
 
             else:
                 st.write("N/A (Selected company is British Gas)")
+
+        if view == "sentiment":
+            # Group left data by date and compute mean overall sentiment
+            left_grouped = filtered_data_left.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
+            # Group right data by date and compute mean overall sentiment
+            right_grouped = filtered_data_right.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
+
+            # Ensure the "Year-Month" column is in datetime format for both
+            left_grouped["Year-Month"] = pd.to_datetime(left_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+            right_grouped["Year-Month"] = pd.to_datetime(right_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+
+            # Merge the two DataFrames on the "Year-Month" column
+            merged_df = pd.merge(left_grouped, right_grouped, on="Year-Month", suffixes=("_left", "_right"))
+
+            # Compute the difference.
+            # For example, you might want: (Selected Company Sentiment) minus (British Gas Sentiment)
+            merged_df["Sentiment Score"] = merged_df["Sentiment Score_left"] - merged_df["Sentiment Score_right"]
+
+            # This merged_df now becomes your difference dataset.
+            filtered_data_compare = merged_df
+        else:
+            # If you're handling aspects, a similar approach can be applied per aspect.
+            # (Use the aspect breakdown difference code from part B)
+            aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
+            left_grouped = filtered_data_left.groupby("Year-Month", as_index=False)[aspect_columns].mean()
+            right_grouped = filtered_data_right.groupby("Year-Month", as_index=False)[aspect_columns].mean()
+
+            left_grouped["Year-Month"] = pd.to_datetime(left_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+            right_grouped["Year-Month"] = pd.to_datetime(right_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+
+            merged_df = pd.merge(left_grouped, right_grouped, on="Year-Month", suffixes=("_left", "_right"))
+
+            for aspect in aspects_map.keys():
+                col_left = f"{aspect}_sentiment_score_left"
+                col_right = f"{aspect}_sentiment_score_right"
+                diff_col = f"{aspect}_sentiment_score"
+                merged_df[diff_col] = merged_df[col_left] - merged_df[col_right]
+
+            filtered_data_compare = merged_df
+
+
+        plot_chart_2(product_name, f"Sentiment Comparison", "", filtered_data_compare, view)
 
         # Add divider
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
