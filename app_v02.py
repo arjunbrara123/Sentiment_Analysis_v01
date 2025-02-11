@@ -131,7 +131,7 @@ if mode == "🏢 Company Mode":
     #st.markdown(f"# {company_name} - Competitor Analytics")
     st.markdown(f"# Competitor Analytics")
     st.markdown(f"**Selected Product Line:** {selected_product}")
-    st.markdown(f"# {company_name}")
+    #st.markdown(f"# {company_name}")
 
     if analysis_mode == "🚁 Overview":
         #st.markdown("## Side-by-Side Product Overview")
@@ -164,7 +164,7 @@ if mode == "🏢 Company Mode":
 
         # Right Column: British Gas Summary (or blank if British Gas is selected)
         with col2:
-            st.markdown(f"### Equivalent BG Product Comparison")
+            st.markdown(f"### British Gas")
             if "British Gas" not in selected_company:
                 # if british_gas_summary.size > 0:
                 #     st.write(british_gas_summary[0])
