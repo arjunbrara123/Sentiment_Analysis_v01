@@ -153,7 +153,8 @@ if mode == "🏢 Company Mode":
 
         # Left Column: Selected Company's Summary
         with col1:
-            st.markdown(f"## {company_name} ") #- {selected_product}")
+            #st.markdown(f"## {company_name} ")# - {selected_product}")
+            st.markdown(f"<h2 style='text-decoration: underline;'>{company_name}</h2>", unsafe_allow_html=True)
             #if selected_summary.size > 0:
             st.markdown('### Strengths')
             st.write(selected_summary["Strengths"].values[0])
@@ -164,7 +165,8 @@ if mode == "🏢 Company Mode":
 
         # Right Column: British Gas Summary (or blank if British Gas is selected)
         with col2:
-            st.markdown(f"## British Gas")
+            #st.markdown(f"## British Gas")
+            st.markdown("<h2 style='text-decoration: underline;'>British Gas</h2>", unsafe_allow_html=True)
             if "British Gas" not in selected_company:
                 # if british_gas_summary.size > 0:
                 #     st.write(british_gas_summary[0])
