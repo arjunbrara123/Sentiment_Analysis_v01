@@ -128,8 +128,10 @@ with st.sidebar:
 # Main dashboard layout
 if mode == "🏢 Company Mode":
 
-    st.markdown(f"# {company_name} - Competitor Analytics")
+    #st.markdown(f"# {company_name} - Competitor Analytics")
+    st.markdown(f"# Competitor Analytics")
     st.markdown(f"**Selected Product Line:** {selected_product}")
+    st.markdown(f"# {company_name}")
 
     if analysis_mode == "🚁 Overview":
         #st.markdown("## Side-by-Side Product Overview")
