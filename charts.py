@@ -214,7 +214,7 @@ def plot_chart_1(group_var, title, desc, data):
     fig = add_red_line(fig)
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_chart_2(product, title, desc, data):
+def plot_chart_2(product, title, desc, data, view="aspect"):
     """
     Plots sentiment trends for different service aspects over time for a selected product.
 
@@ -226,10 +226,16 @@ def plot_chart_2(product, title, desc, data):
     """
 
     # Define aspect sentiment score column names
-    aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
+    if view == "aspect":
+        aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
+    elif view == "sentiment":
+        aspect_columns = ["Sentiment Score"]
 
     # Filter data for the selected product only
-    data_filtered = data[data["Final Product Category"] == product]
+    if "all" not in product.lower():
+        data_filtered = data[data["Final Product Category"] == product]
+    else:
+        data_filtered = data
 
     # Ensure we have valid data
     if data_filtered.empty:
@@ -245,19 +251,32 @@ def plot_chart_2(product, title, desc, data):
 
     # Create a Plotly figure
     fig = go.Figure()
-
-    # Add a line trace for each aspect
-    for aspect, aspect_column in zip(aspects, aspect_columns):
+    print("View: " + view)
+    if view == "aspect":
+        # Add a line trace for each aspect
+        for aspect, aspect_column in zip(aspects, aspect_columns):
+            fig.add_trace(
+                go.Scatter(
+                    x=data_grouped["Year-Month"],
+                    y=data_grouped[aspect_column],
+                    mode="lines+markers",
+                    name=aspects_map[aspect],  # Legend will display the aspect name
+                    hovertemplate=f"<b>{aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
+                    line=dict(width=2)  # Keep the lines clean and simple
+                )
+            )
+    elif view == "sentiment":
         fig.add_trace(
             go.Scatter(
                 x=data_grouped["Year-Month"],
-                y=data_grouped[aspect_column],
+                y=data_grouped["Sentiment Score"],
                 mode="lines+markers",
-                name=aspects_map[aspect],  # Legend will display the aspect name
-                hovertemplate=f"<b>{aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
-                line=dict(width=2)  # Keep the lines clean and simple
+                name="Overall Sentiment",
+                hovertemplate="<b>Overall Sentiment Score:</b> %{y:.2f}<br>",
+                line=dict(width=2)
             )
         )
+
 
     # Update chart aesthetics using the existing style function
     fig.update_layout(
