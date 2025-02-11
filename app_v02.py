@@ -131,7 +131,7 @@ if mode == "🏢 Company Mode":
     #st.markdown(f"# {company_name} - Competitor Analytics")
     st.markdown(f"# Competitor Analytics")
     st.markdown(f"**Selected Product Line:** {selected_product}")
-    #st.markdown(f"# {company_name}")
+
 
     if analysis_mode == "🚁 Overview":
         #st.markdown("## Side-by-Side Product Overview")
@@ -158,8 +158,6 @@ if mode == "🏢 Company Mode":
             #if selected_summary.size > 0:
             st.markdown('### Strengths')
             st.write(selected_summary["Strengths"].values[0])
-            st.markdown('### Weaknesses')
-            st.write(selected_summary["Weaknesses"].values[0])
             #else:
             #    st.write("No summary available for the selected company and product.")
 
@@ -174,6 +172,25 @@ if mode == "🏢 Company Mode":
                 #     st.write("No British Gas summary available for the selected product.")
                 st.markdown('### Strengths')
                 st.write(british_gas_summary["Strengths"].values[0])
+            else:
+                st.write("N/A (Selected company is British Gas)")
+
+
+        # Create two columns for side-by-side display
+        col1, col2 = st.columns(2)
+
+
+        # Left Column: Selected Company's Summary
+        with col1:
+            st.markdown('### Weaknesses')
+            st.write(selected_summary["Weaknesses"].values[0])
+            #else:
+            #    st.write("No summary available for the selected company and product.")
+
+        # Right Column: British Gas Summary (or blank if British Gas is selected)
+        with col2:
+            #st.markdown(f"## British Gas")
+            if "British Gas" not in selected_company:
                 st.markdown('### Weaknesses')
                 st.write(british_gas_summary["Weaknesses"].values[0])
             else:
@@ -254,7 +271,7 @@ if mode == "🏢 Company Mode":
             (prod_summary_data["Company"] == selected_company) &
             (prod_summary_data["Product"] == selected_product)
         ]
-        
+
         if not selected_row.empty:
             # Get the first (and assumed only) row for the selected company and product.
             row = selected_row.iloc[0]
