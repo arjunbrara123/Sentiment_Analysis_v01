@@ -255,20 +255,25 @@ if mode == "🏢 Company Mode":
             # Get the first (and assumed only) row for the selected company and product.
             row = selected_row.iloc[0]
 
-            # Define the fixed list of aspect names (these must match exactly the CSV column headers)
-            fixed_aspects = [
-                "Appointment Scheduling",
-                "Customer Service",
-                "Response Speed",
-                "Engineer Experience",
-                "Solution Quality",
-                "Value For Money"
-            ]
+            # # Define the fixed list of aspect names (these must match exactly the CSV column headers)
+            # fixed_aspects = [
+            #     "Appointment Scheduling",
+            #     "Customer Service",
+            #     "Response Speed",
+            #     "Engineer Experience",
+            #     "Solution Quality",
+            #     "Value For Money"
+            # ]
+            #
+            # # Loop through each aspect and create an expander with its text
+            # for aspect in fixed_aspects:
+            #     with st.expander(aspect):
+            #         st.write(row[aspect])
 
-            # Loop through each aspect and create an expander with its text
-            for aspect in fixed_aspects:
-                with st.expander(aspect):
-                    st.write(row[aspect])
+            # Use aspects_map directly to loop through the aspects.
+            for aspect_col, aspect_display in aspects_map.items():
+                with st.expander(aspect_display):
+                    st.write(row[aspect_col])
         else:
             st.write("No aspect details available.")
 
