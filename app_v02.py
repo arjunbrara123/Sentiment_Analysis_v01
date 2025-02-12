@@ -190,7 +190,7 @@ if mode == "🏢 Company Mode":
             for aspect_col, aspect_display in aspects_map.items():
                 with st.expander(aspect_display):
                     plot_aspect_comparison(product_name, aspect_col, company_name,
-                                           f"{aspect_display} Aspect Compare", "",
+                                           f"{aspect_display} Comparison", "",
                                            sa_monthly_data)
                     col1, col2 = st.columns([1, 5])
                     with col1:
