@@ -1,8 +1,4 @@
 Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling_sentiment_score,Customer Service_sentiment_score,Response Speed_sentiment_score,Engineer Experience_sentiment_score,Solution Quality_sentiment_score,Value For Money_sentiment_score,Reviews,Lapse Probability
-01/12/2023,British Gas,Appliance Cover,33,85,90,45,90,90,40,2,0.087
-01/12/2023,British Gas,Energy,2,-13.43,-9.86,-15.65,4.86,-10.83,-32.69,108,0.288
-01/12/2023,British Gas,Gas Products,73,54.3,71.99,52.8,68.31,66.64,25.4,359,0.033
-01/12/2023,British Gas,Plumbing & Drains,25,3.33,23.33,21.11,33.33,18.89,8.89,9,0.112
 01/01/2024,British Gas,Appliance Cover,39,34,80,40,90,82,72,5,0.154
 01/01/2024,British Gas,Energy,-5,-10.26,-3.93,-13.03,-3.99,-6.21,-26.47,228,0.255
 01/01/2024,British Gas,Gas Products,76,60.39,72.11,53.09,65.74,65.46,20.19,752,0.03
@@ -147,7 +143,14 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/12/2024,CheckATrade,Plumbing & Drains,59,27,58,36,60,59,50,53,
 01/12/2024,CheckATrade,Home Electrical,89,56,88,76,88,86,73,8,
 01/12/2024,CheckATrade,Heating,95,0,90,0,95,95,85,2,
-01/01/2025,CheckATrade,Gas Products,21,6,20,15,20,21,15,97,
-01/01/2025,CheckATrade,Plumbing & Drains,41,9,37,28,40,40,35,32,
-01/01/2025,CheckATrade,Home Electrical,94,86,94,91,94,93,84,7,
-01/01/2025,CheckATrade,Heating,0,0,0,0,0,0,0,0,
+01/01/2024,Domestic & General,Appliance Cover,31,13,33,28,31,32,22,182,
+01/02/2024,Domestic & General,Appliance Cover,27,6,28,20,26,27,15,184,
+01/03/2024,Domestic & General,Appliance Cover,25,7,25,23,25,25,17,113,
+01/04/2024,Domestic & General,Appliance Cover,39,15,39,30,35,38,25,186,
+01/05/2024,Domestic & General,Appliance Cover,44,29,44,39,42,40,29,164,
+01/06/2024,Domestic & General,Appliance Cover,44,25,44,37,43,44,29,159,
+01/07/2024,Domestic & General,Appliance Cover,48,26,47,42,45,47,35,196,
+01/08/2024,Domestic & General,Appliance Cover,55,34,56,48,50,55,39,196,
+01/09/2024,Domestic & General,Appliance Cover,51,35,51,45,48,50,35,188,
+01/10/2024,Domestic & General,Appliance Cover,45,24,46,41,44,44,33,224,
+01/11/2024,Domestic & General,Appliance Cover,27,10,27,22,24,25,15,98,
