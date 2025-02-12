@@ -1,14 +1,13 @@
 # Import required packages
-import charts
 from charts import *
-from getpass import getuser
-from sklearn.linear_model import LinearRegression
-from openai import OpenAI
-import plotly.express as px
 from datetime import datetime
-
 #from dotenv import load_dotenv
 #load_dotenv()
+
+# Required File Inputs
+# 1) prod_summary_data - LLM product-level text summaries at company / product level, at an overall and aspect level.
+# 2) sa_monthly_data   - LLM sentiment analysis monthly data, also at company / product level, at an overall and aspect level.
+# 3) reviews           - Feeding into the chatbot to answer questions based from
 
 # Set Streamlit Page Config
 st.set_page_config(
@@ -24,20 +23,8 @@ START_TIME = datetime.now()
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-st.markdown(
-    """
-    <style>
-    [data-testid="stSidebar"] {
-        background: linear-gradient(to left, #0490d7, white);
-        color: black;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
-
 # Load required data
-#@st.cache_data
+@st.cache_data
 def load_agg_data(input_filepath):
 
     # Read in the data
@@ -61,18 +48,16 @@ def load_agg_data(input_filepath):
         print(f"Error encountered: {e}")
         return 0
 
-# Add this with other data loading (after reviews_data = ...)
+# Input File #1 - This contains text summaries at a product / company level, both overall and for each aspect
 prod_summary_data = pd.read_csv("LLM Prod Level Summary.csv")
 company_list = prod_summary_data['Company'].unique().tolist()
+
+# Input File #2 - This contains the monthly sentiment / aspect score at a product / company level
 sa_monthly_data = pd.read_csv("LLM SA Monthly Data.csv")
 
 # Create a container with a white background for the sidebar controls
 with st.sidebar:
     st.sidebar.image("company_logo.png")
-    st.sidebar.markdown(f"**Current User:** {getuser()}")
-
-
-    # New mode selection radio button at the very top
 
     with st.expander("🏫 Select Competitor / Product", expanded=False):
         mode = st.radio(
@@ -101,13 +86,7 @@ with st.sidebar:
 
     if mode == "🏢 Company Mode":
         company_name = selected_company.split(' ', 1)[-1]
-        input_LLM_Tabs_Summary_data = "LLM Summary " + "British Gas.csv" #+ company_name + ".csv"
-        #input_SA_Monthly_data = "SA Monthly Data " + company_name + ".csv"
         input_Raw_Comments_Text_data = "Cleaned Reviews " + company_name + ".csv"
-
-        #data = load_agg_data(input_SA_Monthly_data)
-        tab_data = pd.read_csv(input_LLM_Tabs_Summary_data)
-        #insight_list = tab_data["Type"].unique().tolist()
         reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
 
     product_name = selected_product.split(' ', 1)[-1]
@@ -120,7 +99,14 @@ with st.sidebar:
         )
 
     with st.expander("🕜 Time Period Settings", expanded=False):
-        st.write("Test")
+        filter_year = st.selectbox(
+            "Pick a Year to Display",
+            ("All", "2021", "2022", "2023", "2024", "2025"),
+        index=4)
+        print(f"Year Select: {filter_year}")
+
+    if filter_year != "All":
+        sa_monthly_data = sa_monthly_data[sa_monthly_data['Year-Month'].str[-4:] == str(filter_year)]
 
     with st.expander("⚙️ Settings", expanded=False):
         tts_flag = st.toggle("Alice Reads Responses Aloud", value=False)
@@ -132,87 +118,19 @@ if mode == "🏢 Company Mode":
     st.markdown(f"# Competitor Analytics")
     st.markdown(f"**Selected Product Line:** {selected_product}")
 
-
     if analysis_mode == "🚁 Overview":
-        #st.markdown("## Side-by-Side Product Overview")
 
-        # Filter the summary for the selected company and product
-        selected_summary = prod_summary_data[
-            (prod_summary_data["Company"] == selected_company) &
-            (prod_summary_data["Product"] == selected_product)
-        ]
-
-        # Filter the summary for British Gas and the same product
-        british_gas_summary = prod_summary_data[
-            (prod_summary_data["Company"].str.contains("British Gas")) &
-            (prod_summary_data["Product"] == selected_product)
-        ]
-
-        # Create two columns for side-by-side display
-        col1, col2 = st.columns(2)
-
-        # Left Column: Selected Company's Summary
-        with col1:
-            #st.markdown(f"## {company_name} ")# - {selected_product}")
-            st.markdown(f"<h2 style='text-decoration: underline;'>{company_name}</h2>", unsafe_allow_html=True)
-            #if selected_summary.size > 0:
-            st.markdown('### Strengths')
-            st.write(selected_summary["Strengths"].values[0])
-            #else:
-            #    st.write("No summary available for the selected company and product.")
-
-        # Right Column: British Gas Summary (or blank if British Gas is selected)
-        with col2:
-            #st.markdown(f"## British Gas")
-            st.markdown("<h2 style='text-decoration: underline;'>British Gas</h2>", unsafe_allow_html=True)
-            if "British Gas" not in selected_company:
-                # if british_gas_summary.size > 0:
-                #     st.write(british_gas_summary[0])
-                # else:
-                #     st.write("No British Gas summary available for the selected product.")
-                st.markdown('### Strengths')
-                st.write(british_gas_summary["Strengths"].values[0])
-            else:
-                st.write("N/A (Selected company is British Gas)")
-
-
-        # Create two columns for side-by-side display
-        col1, col2 = st.columns(2)
-
-
-        # Left Column: Selected Company's Summary
-        with col1:
-            st.markdown('### Weaknesses')
-            st.write(selected_summary["Weaknesses"].values[0])
-            #else:
-            #    st.write("No summary available for the selected company and product.")
-
-        # Right Column: British Gas Summary (or blank if British Gas is selected)
-        with col2:
-            #st.markdown(f"## British Gas")
-            if "British Gas" not in selected_company:
-                st.markdown('### Weaknesses')
-                st.write(british_gas_summary["Weaknesses"].values[0])
-            else:
-                st.write("N/A (Selected company is British Gas)")
-
-        # Add divider
-        st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
-        st.markdown("## Sentiment Analytics")
         # When toggled on, it represents "Aspect View". When off, it represents "Sentiment View".
         chart_toggle = st.toggle("Split Sentiment Into Aspects", value=True,
                                  help="Toggle between Aspect View (all aspects) and Sentiment View (overall sentiment)")
-        if chart_toggle:
-            view = "aspect"
-        else:
-            view = "sentiment"
+
+        view = "aspect" if chart_toggle else "sentiment"
 
         # Create two columns for side-by-side display
         col1, col2 = st.columns(2)
 
         # Left Column: Selected Company's Summary
         with col1:
-            #st.markdown(f"### {company_name} - {selected_product}")
 
             # Plot sentiment graph for the selected company and product
             if "all" not in product_name.lower():
@@ -225,20 +143,15 @@ if mode == "🏢 Company Mode":
                     (sa_monthly_data["Company"].str.contains(company_name))
                 ]
             if not filtered_data_left.empty:
-
-                #st.markdown("### Sentiment Trends Over Time")
                 plot_chart_2(product_name, company_name, "", filtered_data_left, view)
             else:
                 st.write("No sentiment data available for the selected company and product.")
 
         # Right Column: British Gas Summary (or blank if British Gas is selected)
         with col2:
-            #st.markdown(f"### Equivalent BG Product Comparison")
+
             if "British Gas" not in selected_company:
 
-                print("-----")
-                print(product_name.lower)
-                print("=====")
                 # Filter sentiment data for British Gas and the same product
                 if "all" not in product_name.lower():
                     filtered_data_right = sa_monthly_data[
@@ -251,56 +164,12 @@ if mode == "🏢 Company Mode":
                         ]
                 # Plot sentiment graph for British Gas
                 if not filtered_data_right.empty:
-
-                    #st.markdown("### Sentiment Trends Over Time")
                     plot_chart_2(product_name, f"British Gas", "", filtered_data_right, view)
                 else:
                     st.write("No sentiment data available for British Gas.")
 
             else:
                 st.write("N/A (Selected company is British Gas)")
-
-        if view == "sentiment":
-            # Group left data by date and compute mean overall sentiment
-            left_grouped = filtered_data_left.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
-            # Group right data by date and compute mean overall sentiment
-            right_grouped = filtered_data_right.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
-
-            # Ensure the "Year-Month" column is in datetime format for both
-            left_grouped["Year-Month"] = pd.to_datetime(left_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-            right_grouped["Year-Month"] = pd.to_datetime(right_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-
-            # Merge the two DataFrames on the "Year-Month" column
-            merged_df = pd.merge(left_grouped, right_grouped, on="Year-Month", suffixes=("_left", "_right"))
-
-            # Compute the difference.
-            # For example, you might want: (Selected Company Sentiment) minus (British Gas Sentiment)
-            merged_df["Sentiment Score"] = merged_df["Sentiment Score_left"] - merged_df["Sentiment Score_right"]
-
-            # This merged_df now becomes your difference dataset.
-            filtered_data_compare = merged_df
-        else:
-            # If you're handling aspects, a similar approach can be applied per aspect.
-            # (Use the aspect breakdown difference code from part B)
-            aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
-            left_grouped = filtered_data_left.groupby("Year-Month", as_index=False)[aspect_columns].mean()
-            right_grouped = filtered_data_right.groupby("Year-Month", as_index=False)[aspect_columns].mean()
-
-            left_grouped["Year-Month"] = pd.to_datetime(left_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-            right_grouped["Year-Month"] = pd.to_datetime(right_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-
-            merged_df = pd.merge(left_grouped, right_grouped, on="Year-Month", suffixes=("_left", "_right"))
-
-            for aspect in aspects_map.keys():
-                col_left = f"{aspect}_sentiment_score_left"
-                col_right = f"{aspect}_sentiment_score_right"
-                diff_col = f"{aspect}_sentiment_score"
-                merged_df[diff_col] = merged_df[col_left] - merged_df[col_right]
-
-            filtered_data_compare = merged_df
-
-
-        plot_chart_2(product_name, f"Sentiment Comparison", "", filtered_data_compare, view)
 
         # Add divider
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
@@ -315,46 +184,31 @@ if mode == "🏢 Company Mode":
         if not selected_row.empty:
             # Get the first (and assumed only) row for the selected company and product.
             row = selected_row.iloc[0]
-
-            # # Define the fixed list of aspect names (these must match exactly the CSV column headers)
-            # fixed_aspects = [
-            #     "Appointment Scheduling",
-            #     "Customer Service",
-            #     "Response Speed",
-            #     "Engineer Experience",
-            #     "Solution Quality",
-            #     "Value For Money"
-            # ]
-            #
-            # # Loop through each aspect and create an expander with its text
-            # for aspect in fixed_aspects:
-            #     with st.expander(aspect):
-            #         st.write(row[aspect])
+            st.write("Company: " + company_name)
 
             # Use aspects_map directly to loop through the aspects.
             for aspect_col, aspect_display in aspects_map.items():
                 with st.expander(aspect_display):
-                    st.write(row[aspect_col])
+                    plot_aspect_comparison(product_name, aspect_col, company_name,
+                                           f"{aspect_display} Aspect Compare", "",
+                                           sa_monthly_data)
+                    col1, col2 = st.columns([1, 5])
+                    with col1:
+                        aspect_score = int(filtered_data_left[aspect_col + "_sentiment_score"].mean())
+                        if company_name == "British Gas":
+                            aspect_difference = ""
+                        else:
+                            aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
+                        st.metric(company_name, aspect_score, aspect_difference)
+                    with col2:
+                        st.write(row[aspect_col])
+
+
         else:
             st.write("No aspect details available.")
 
-        # aspect_summaries = tab_data[tab_data["Type"].str.contains("Promoter")]
-        # for _, row in aspect_summaries.iterrows():
-        #     with st.expander(f"{row['Tab Emoji']} {row['Tab Headline']} ({row['Percentage']}%)"):
-        #         st.markdown(f"**Summary**\n{row['Sentiment Summary']}")
-        #         st.markdown(f"**Recommended Actions**\n{row['Recommended Actions']}")
-
     elif analysis_mode == "👽 Emerging Trends":
         st.markdown("## Emerging Customer Sentiment Trends")
-
-        # trends = tab_data[tab_data["Type"].str.contains("Emerging")]
-        # cols = st.columns(2)
-        # for idx, (_, row) in enumerate(trends.iterrows()):
-        #     with cols[idx % 2]:
-        #         st.markdown(f"### {row['Tab Emoji']} {row['Tab Headline']}")
-        #         st.write(f"**{row['Percentage']}%** of recent mentions")
-        #         st.markdown(f"*{row['Chart Analysis']}*")
-        #         st.markdown("---")
 
     elif analysis_mode == "💬 Ask Alice...":
         st.markdown("## AI Insights Assistant")
@@ -368,12 +222,9 @@ if mode == "🏢 Company Mode":
 elif mode == "🎍 Market Mode":
     st.markdown(f"# Market Sentiment Analytics for {selected_product}")
 
-    # Dynamically generate tabs using the aspects_map dictionary.
-    # aspects_map keys hold the aspect keys and values hold the display names (with emojis).
+    # Dynamically generate tabs using the aspects_map dictionary - 6 aspects
     aspects = list(aspects_map.keys())
     tab_names = [aspects_map[aspect] for aspect in aspects]
-
-    # Create 6 tabs (one for each aspect)
     tabs = st.tabs(tab_names)
 
     # Loop over the aspects and fill each tab with its respective chart and a placeholder
