@@ -201,7 +201,7 @@ if mode == "🏢 Company Mode":
                             aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
                         st.metric(company_name, aspect_score, aspect_difference)
                     with col2:
-                        st.write(row[aspect_col])
+                        st.markdown(row[aspect_col], unsafe_allow_html=True)
 
 
         else:
