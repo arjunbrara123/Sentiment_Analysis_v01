@@ -211,13 +211,107 @@ if mode == "🏢 Company Mode":
         st.markdown("## Emerging Customer Sentiment Trends")
 
     elif analysis_mode == "💬 Ask Alice...":
-        st.markdown("## AI Insights Assistant")
+        st.markdown(
+            f"<div style='font-size: 35px; text-align: center; color: #012973; margin-bottom: 10px;'><b>🔬 Ask Alice a more specific sentiment analysis question</b><br></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"<div style='text-align: center; color: #012973; margin-bottom: 15px;'>This selection allows you to ask specific questions focused on a specific month, and specific product group, which Alice will answer based on the sentiment and online chatter data available for the specific month and product group.</div>",
+            unsafe_allow_html=True
+        )
+        col1, col2 = st.columns([2, 2])
+        with col1:
+            filter_llm_month = st.selectbox(
+                "Please select a specific month...",
+                reviews_data["Year-Month"].unique()
+            )
+        with col2:
+            filter_llm_type = st.selectbox(
+                "Please select a specific customer segment",
+                ("Everyone", "Tbc...    "),
+            )
+        query_llm = st.text_area("Enter your more specific query here...")
+        client = OpenAI()
+        convo = []
 
-        query = st.text_input("Ask Alice about customer sentiment patterns:")
-        if query:
-            # Simplified AI response (would integrate with your existing Alice logic)
-            response = f"Alice's analysis for {selected_product}:\n\n- Positive trend in engineer responsiveness\n- Ongoing issues with billing clarity\n- Recommendation: Prioritize billing system audit"
-            st.info(response)
+        # Filter relevant data
+        filtered_reviews = reviews_data[
+            reviews_data["Year-Month"] == filter_llm_month]
+        filtered_reviews = filtered_reviews[
+                               filtered_reviews["Final Product Category"] == product_name][:1000].values.tolist()
+        # print("=============")
+        # print(filter_llm_month)
+        # print(reviews_data.head())
+        # print("================")
+        # print(filtered_reviews)
+        # print("================")
+        OPENAI_SYSTEM_PROMPT = f"""
+        You are a customer experience expert at {selected_company} Insurance. 
+        You speak in a warm, friendly, and conversational tone, occasionally adding light humor or puns to keep engagement high. 
+        Your task is to analyse the company's social media data to provide well-reasoned, data-driven insights. 
+        Focus on the biggest themes or commonalities between a large volume of comments as opposed to relying or referencing any one specific comment, unless there is one comment which is interesting and representative of how a very large number of comments feel.
+        Remember the audience is {selected_company} senior members, so try and phrase things that doesn't show the company in an overly negative light or in a way that might offend anyone.
+        When you answer a question, do the following:
+
+        1. Summarise the key data points from the social media context that support your answer, accounting for what product line it is too.
+        2. Provide 2-3 concrete, actionable recommendations for the business, explaining briefly why these recommendations follow from the data and given product line.
+        3. Use a short concluding paragraph or bullet points to tie everything together. 
+        4. If the data is insufficient to answer the question, or the question is not relevant to {selected_company}, politely say so and explain why.
+
+        Always keep the conversation focused on {selected_company} Insurance, and ensure the user knows all your recommendations are rooted in the data you've been given.
+        """
+
+
+        def llm_inference(query, context):
+            try:
+                # st.write(context)
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",  # "o1-mini", #"gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": (
+                            OPENAI_SYSTEM_PROMPT
+                        )},
+                        {"role": "user",
+                         "content": (
+                             f"Month: {filter_llm_month}\n\n"
+                             f"Product Line: {product_name}\n\n"
+                             f"Social Media Data: {context}\n\n"
+                             f"Question: {query}\n\n"
+                             "Please reference the social media data directly in your answer, "
+                             "and offer actionable steps British Gas Insurance can take."
+                         )
+                         }
+                    ],
+                    temperature=0.5,
+                    max_tokens=1000,
+                    # max_completion_tokens=250,
+                )
+
+                # Parse the response content
+                answer = response.choices[0].message.content.strip()
+                return answer
+
+            except Exception as e:
+                return f"Inferencing Failed, Error: {str(e)}"
+
+
+        if st.button("🙋‍♀️ Ask Alice"):
+            st.markdown(f"<b>🤔 User: </b>{query_llm}", unsafe_allow_html=True)
+            if len(query_llm) == 0:
+                st.markdown(f"<b>💁‍♀️ Alice</b>: Please enter a question, the query box is currently blank...",
+                            unsafe_allow_html=True)
+            else:
+                answer = llm_inference(query_llm, filtered_reviews)
+                st.markdown(f"<b>💁‍♀️ Alice</b>:", unsafe_allow_html=True)
+                st.write(answer)
+                elapsed_time = datetime.now() - START_TIME
+                hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
+                minutes, seconds = divmod(remainder, 60)
+                pd.DataFrame([[datetime.now(), f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}", query_llm,
+                               filter_llm_month, product_name, "Group Placeholder", answer]]).to_csv(
+                    'LLM_Runlog.csv', mode='a', index=False, header=False)
+
+
 
 elif mode == "🎍 Market Mode":
     st.markdown(f"# Market Sentiment Analytics for {selected_product}")
