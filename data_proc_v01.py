@@ -4,7 +4,7 @@ import os
 import time
 import datetime
 from openai import OpenAI
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 # ---------------------------------------------------
 # Page Configuration & Environment Setup
