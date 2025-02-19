@@ -6,8 +6,8 @@ from charts import *
 from openai import OpenAI
 import hashlib
 
-from dotenv import load_dotenv
-load_dotenv()
+#from dotenv import load_dotenv
+#load_dotenv()
 
 # Required File Inputs
 # 1) prod_summary_data - LLM product-level text summaries at company / product level, at an overall and aspect level.
