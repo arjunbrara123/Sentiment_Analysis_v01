@@ -6,8 +6,6 @@ import datetime
 import re
 from openai import OpenAI
 from transformers import pipeline
-from langdetect import detect
-from langdetect.lang_detect_exception import LangDetectException
 #from dotenv import load_dotenv
 
 # ---------------------------------------------------
@@ -281,20 +279,9 @@ def run():
                     st.success("Spam detection complete!")
 
                     st.markdown("---")
-                    st.markdown("### Step 2: Language Detection")
-
-                    def detect_language(text):
-                        try:
-                            return detect(text)
-                        except LangDetectException:
-                            return "unknown"
-
-                    df_clean["detected_lang"] = df_clean["Review"].apply(detect_language)
-                    df_clean["is_english"] = df_clean["detected_lang"].apply(lambda x: True if x == "en" else False)
-                    st.success("Language detection complete!")
 
                     st.markdown("---")
-                    st.markdown("### Step 3: Justification Check")
+                    st.markdown("### Step 2: Justification Check")
                     justification_regex = re.compile(r"\b(because|since|as|due to|reason|why|so that)\b", re.IGNORECASE)
 
                     def has_refined_justification(text):
@@ -304,14 +291,12 @@ def run():
                     st.success("Justification check complete!")
 
                     st.markdown("---")
-                    st.markdown("### Step 4: Calculate Final Review Weight")
+                    st.markdown("### Step 3: Calculate Final Review Weight")
 
                     def calculate_review_weight(row):
                         if row["is_spam"]:
                             return 0.0
                         weight = 1.0
-                        if not row["is_english"]:
-                            weight *= 0.5
                         if row["has_justification"]:
                             weight *= 1.0
                         else:
