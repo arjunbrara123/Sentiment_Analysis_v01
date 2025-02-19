@@ -57,6 +57,16 @@ def load_agg_data(input_filepath):
     except ValueError as e:
         print(f"Error encountered: {e}")
         return 0
+# Load Market Summary Data
+@st.cache_data
+def load_market_summary(input_filepath):
+    """Loads the market summary data and ensures column names are standardized."""
+    data = pd.read_csv(input_filepath)
+
+    # Ensure column names are stripped of leading/trailing spaces
+    data.columns = [col.strip() for col in data.columns]
+
+    return data
 
 # Input File #1 - This contains text summaries at a product / company level, both overall and for each aspect
 prod_summary_data = pd.read_csv("LLM Prod Level Summary.csv")
@@ -64,6 +74,9 @@ company_list = prod_summary_data['Company'].unique().tolist()
 
 # Input File #2 - This contains the monthly sentiment / aspect score at a product / company level
 sa_monthly_data = pd.read_csv("LLM SA Monthly Data.csv")
+
+# Input File #3 - Load Market Summary Data
+market_summary_data = load_market_summary("LLM Market Summary.csv")
 
 # Create a container with a white background for the sidebar controls
 with st.sidebar:
@@ -344,16 +357,33 @@ elif mode == "🎍 Market Mode" and not dev_flag:
     for idx, aspect in enumerate(aspects):
         with tabs[idx]:
             st.markdown(f"## {aspects_map[aspect]}")
-            # Call the new plotting function; the title can be dynamically built
-            plot_chart_3(
-                product=product_name,
-                aspect=aspect,
-                title=f"{aspects_map[aspect]} Sentiment Trends for {selected_product}",
-                desc="",
-                data=sa_monthly_data
-            )
-            # Placeholder for additional summary information for this aspect
-            st.write("Placeholder for additional summary information...")
+
+            chart_col, insight_col = st.columns([5,2])
+
+            with chart_col:
+                # Call the new plotting function; the title can be dynamically built
+                plot_chart_3(
+                    product=product_name,
+                    aspect=aspect,
+                    title=f"{aspects_map[aspect]} Market Sentiment Trends",
+                    desc="",
+                    data=sa_monthly_data
+                )
+
+            with insight_col:
+                # Retrieve the corresponding analysis from the market summary
+                filtered_analysis = market_summary_data[
+                    (market_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year))) &  # Only use data from that year
+                    (market_summary_data["Product"] == product_name) &  # Match product
+                    (market_summary_data["Aspect"] == aspect)  # Match aspect
+                ]
+
+                # Display the analysis if available
+                if not filtered_analysis.empty:
+                    analysis_text = filtered_analysis.iloc[0]["Analysis"]
+                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+                else:
+                    st.markdown("No market insights available for this aspect.")
 
 elif dev_flag:
     data_proc_v01.run()
