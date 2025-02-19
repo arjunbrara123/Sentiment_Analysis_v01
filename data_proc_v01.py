@@ -195,7 +195,8 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
         progress_bar.progress(progress_value)
         if (idx + 1) % 100 == 0:
             st.session_state["latest_preview"] = pd.DataFrame(processed_rows[-100:])
-            st.table(pd.DataFrame(processed_rows))
+            with st.expander("😶‍🌫️ Results Preview"):
+                st.table(pd.DataFrame(processed_rows))
     total_time = time.time() - start_time
     return processed_rows, total_time
 
