@@ -3,7 +3,11 @@ import pandas as pd
 import os
 import time
 import datetime
+import re
 from openai import OpenAI
+from transformers import pipeline
+from langdetect import detect
+from langdetect.lang_detect_exception import LangDetectException
 #from dotenv import load_dotenv
 
 # ---------------------------------------------------
@@ -206,8 +210,8 @@ def run():
     # Dashboard Tabs with Emojis in Titles
     # ---------------------------------------------------
     st.markdown(f"# 🧮 Social Media Underlying Database")
-    tabs = st.tabs(["🏗️ Setup", "🚗 Output", "🪵 Run Log", "🧠 AI Config"])
-    setup_tab, output_tab, runlog_tab, config_tab = tabs
+    tabs = st.tabs(["🧪 Data Cleaning", "🏗️ Run Setup", "🚗 Live Running View", "🪵 Run Log", "🧠 AI Config"])
+    cleaning_tab, setup_tab, output_tab, runlog_tab, config_tab = tabs
 
     # ===================================================
     # CONFIG TAB
@@ -228,6 +232,115 @@ def run():
                     "max_tokens": max_tokens
                 }
                 st.success("API configuration saved.")
+
+    # ===================================================
+    # NEW TAB: Data Cleaning & Analysis
+    # ===================================================
+    with cleaning_tab:
+        st.markdown("<div style='text-align:center;'><h1>🧪 Data Cleaning & Analysis</h1></div>", unsafe_allow_html=True)
+        st.markdown(
+            "This section processes the reviews to detect spam, determine language, check for justification, and calculate a final weight for each review.")
+        company_options = list(COMPANY_PRODUCTS.keys())
+        selected_company_clean = st.selectbox("Select Company:", options=company_options, index=0)
+        cleaning_file = st.file_uploader("Upload Reviews CSV for Cleaning", type=["csv"], key="cleaning_file")
+        if cleaning_file is not None:
+            try:
+                df_clean = pd.read_csv(cleaning_file)
+                valid, err_msg = check_csv_validity(df_clean)
+                if not valid:
+                    st.error(err_msg)
+                else:
+                    st.success("File loaded successfully!")
+                    st.markdown("**Data Preview (first 5 rows):**")
+                    st.dataframe(df_clean.head())
+
+                    st.markdown("---")
+                    st.markdown("### Step 1: Spam Detection")
+                    spam_classifier = pipeline(
+                        "text-classification",
+                        model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+                        truncation=True,
+                        max_length=512,
+                        padding=True
+                    )
+                    reviews_list = df_clean["Review"].tolist()
+                    batch_size = 256
+                    spam_labels = []
+                    spam_scores = []
+                    for i in range(0, len(reviews_list), batch_size):
+                        batch = reviews_list[i: i + batch_size]
+                        results = spam_classifier(batch)
+                        for r in results:
+                            spam_labels.append(r["label"])
+                            spam_scores.append(round(r["score"], 3))
+                    df_clean["spam_label"] = spam_labels
+                    df_clean["spam_confidence"] = spam_scores
+                    SPAM_CONFIDENCE_THRESHOLD = 0.9
+                    df_clean["is_spam"] = df_clean.apply(lambda row: True if (row["spam_label"] == "spam" and row[
+                        "spam_confidence"] > SPAM_CONFIDENCE_THRESHOLD) else False, axis=1)
+                    st.success("Spam detection complete!")
+
+                    st.markdown("---")
+                    st.markdown("### Step 2: Language Detection")
+
+                    def detect_language(text):
+                        try:
+                            return detect(text)
+                        except LangDetectException:
+                            return "unknown"
+
+                    df_clean["detected_lang"] = df_clean["Review"].apply(detect_language)
+                    df_clean["is_english"] = df_clean["detected_lang"].apply(lambda x: True if x == "en" else False)
+                    st.success("Language detection complete!")
+
+                    st.markdown("---")
+                    st.markdown("### Step 3: Justification Check")
+                    justification_regex = re.compile(r"\b(because|since|as|due to|reason|why|so that)\b", re.IGNORECASE)
+
+                    def has_refined_justification(text):
+                        return bool(justification_regex.search(str(text)))
+
+                    df_clean["has_justification"] = df_clean["Review"].apply(has_refined_justification)
+                    st.success("Justification check complete!")
+
+                    st.markdown("---")
+                    st.markdown("### Step 4: Calculate Final Review Weight")
+
+                    def calculate_review_weight(row):
+                        if row["is_spam"]:
+                            return 0.0
+                        weight = 1.0
+                        if not row["is_english"]:
+                            weight *= 0.5
+                        if row["has_justification"]:
+                            weight *= 1.0
+                        else:
+                            weight *= 0.9
+                        return weight
+
+                    df_clean["review_weight"] = df_clean.apply(calculate_review_weight, axis=1)
+                    st.success("Review weight calculation complete!")
+
+                    st.markdown("---")
+                    st.markdown("### Final Cleaned Data Preview")
+                    st.dataframe(df_clean.head(20))
+
+                    output_clean_filename = f"Cleaned Reviews {selected_company_clean} {datetime.datetime.now().strftime('%Y%m%d%H%M%S')}.csv"
+                    df_clean.to_csv(output_clean_filename, index=False)
+                    try:
+                        with open(output_clean_filename, "rb") as file:
+                            st.download_button(
+                                label="⬇️ Download Cleaned CSV",
+                                data=file,
+                                file_name=output_clean_filename,
+                                mime="text/csv"
+                            )
+                    except Exception as e:
+                        st.error(f"Error providing download: {e}")
+            except Exception as e:
+                st.error(f"Error processing file: {e}")
+        else:
+            st.info("Please upload a CSV file for cleaning.")
 
     # ===================================================
     # SETUP TAB
@@ -300,7 +413,7 @@ def run():
                         st.markdown("**Product Categorisation Configuration:**")
                         st.markdown("Select a company and choose which products to include.")
                         company_options = list(COMPANY_PRODUCTS.keys())
-                        selected_company = st.selectbox("Select Company:", options=company_options, index=0)
+                        selected_company = st.selectbox("Select Company:", options=company_options, index=0, key="company_cleaning_select")
                         products_for_company = COMPANY_PRODUCTS[selected_company]
                         selected_products = {}
                         st.markdown("**Product Details:**")
