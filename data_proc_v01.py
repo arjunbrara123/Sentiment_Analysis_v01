@@ -280,8 +280,8 @@ def run():
         with col2:
             with st.container(border=True):
                 st.markdown("**Select Specific AI Analysis Options**")
-                enable_prod = st.checkbox("Enable Product Categorisation", value=True)
-                enable_sentiment = st.checkbox("Enable Sentiment Analysis", value=True)
+                enable_prod = st.checkbox("🧩 Enable Product Categorisation", value=True)
+                enable_sentiment = st.checkbox("🤬 Enable Sentiment Analysis", value=True)
                 if not enable_prod and not enable_sentiment:
                     st.error("At least one analysis option must be enabled.")
 
