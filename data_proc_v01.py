@@ -46,7 +46,9 @@ PRODUCT_DESCRIPTIONS = {
 COMPANY_PRODUCTS = {
     "British Gas": ["Gas Products", "Energy", "Appliance Cover", "Home Electrical", "Plumbing and Drains"],
     "HomeServe": ["Gas Products", "Plumbing and Drains", "Home Electrical"],
-    "CheckATrade": ["Plumbing and Drains", "Home Electrical", "Building"]
+    "CheckATrade": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
+    "Corgi HomePlan": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
+    "Domestic & General": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"]
 }
 
 
