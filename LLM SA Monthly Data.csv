@@ -431,3 +431,47 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/11/2024,Domestic & General,Gas Products,1.7,-10,-1.1,0,18.9,0,-3.3,9
 01/11/2024,Domestic & General,Plumbing & Drains,70,45,80,80,80,80,65,2
 01/11/2024,Domestic & General,Home Electrical,,,,,,,,0
+01/01/2024,Corgi HomePlan,Gas Products,70.4,53.9,74.3,69.9,73.7,71,38.6,253
+01/01/2024,Corgi HomePlan,Plumbing & Drains,70.8,52.2,73.4,64.6,70.8,69.7,50,37
+01/01/2024,Corgi HomePlan,Appliance Cover,51,22,56,56,56,66,42,5
+01/01/2024,Corgi HomePlan,Home Electrical,72.3,48.7,74,78.7,79,71.3,43.3,15
+01/02/2024,Corgi HomePlan,Gas Products,71.6,52.5,74.2,68.5,75.5,71.4,42.9,308
+01/02/2024,Corgi HomePlan,Plumbing & Drains,72.9,40.7,73.6,59.3,74.8,73.8,45.5,29
+01/02/2024,Corgi HomePlan,Appliance Cover,86.7,90,86.7,86.7,86.7,86.7,76.7,3
+01/02/2024,Corgi HomePlan,Home Electrical,73.8,67.5,76.7,75.8,77.5,73.8,44.2,12
+01/03/2024,Corgi HomePlan,Gas Products,78,53.4,80.1,71.2,81.3,78,50.2,369
+01/03/2024,Corgi HomePlan,Plumbing & Drains,71.2,50,73.5,67.3,73.3,70.4,45.8,26
+01/03/2024,Corgi HomePlan,Appliance Cover,62,22,64,60,58,73,56,5
+01/03/2024,Corgi HomePlan,Home Electrical,66.3,31.3,67.5,42.5,68.8,67.5,12.5,8
+01/04/2024,Corgi HomePlan,Gas Products,75.3,56.5,78.3,70.9,78.3,75.2,48.4,379
+01/04/2024,Corgi HomePlan,Plumbing & Drains,74.2,37.4,77.6,67.9,77.6,74.7,53.2,19
+01/04/2024,Corgi HomePlan,Appliance Cover,62.9,64.3,64.3,65.7,62.9,64.3,44.3,7
+01/04/2024,Corgi HomePlan,Home Electrical,58.8,56.3,60.6,62.5,57.5,57.5,43.8,8
+01/05/2024,Corgi HomePlan,Gas Products,78.4,57.8,80.5,72.1,81.8,79.3,50.8,322
+01/05/2024,Corgi HomePlan,Plumbing & Drains,67.5,36.5,71.3,65,71.8,69.3,32.5,20
+01/05/2024,Corgi HomePlan,Appliance Cover,73.3,83.3,73.3,83.3,73.3,83.3,50,3
+01/05/2024,Corgi HomePlan,Home Electrical,65,48.3,66.7,65,76.7,66.7,51.7,6
+01/06/2024,Corgi HomePlan,Gas Products,81.5,55.9,83.9,72.5,84.9,81.1,49.8,430
+01/06/2024,Corgi HomePlan,Plumbing & Drains,57.3,35.4,60.2,53.8,63.1,57.9,28.5,26
+01/06/2024,Corgi HomePlan,Appliance Cover,89.2,71.7,80,60,88.3,88.3,68.3,6
+01/06/2024,Corgi HomePlan,Home Electrical,87.5,70,82.5,80,85,82.5,80,4
+01/07/2024,Corgi HomePlan,Gas Products,78.6,57.2,80.9,70.2,80.9,78.3,49.1,590
+01/07/2024,Corgi HomePlan,Plumbing & Drains,77.3,64.8,78.1,76.5,80.6,79,51,31
+01/07/2024,Corgi HomePlan,Appliance Cover,66,38,50,76,66,66,46,5
+01/07/2024,Corgi HomePlan,Home Electrical,75.5,42.7,73.2,66.4,75.5,73.2,49.1,11
+01/08/2024,Corgi HomePlan,Gas Products,81,60.8,82.9,71.8,82.9,80.6,51,648
+01/08/2024,Corgi HomePlan,Plumbing & Drains,68.3,47.8,69.9,58.3,68.8,66.9,45,36
+01/08/2024,Corgi HomePlan,Appliance Cover,85,86,71,84,84,86,78,5
+01/08/2024,Corgi HomePlan,Home Electrical,80.4,38.3,80.8,55.8,83.3,83.3,45.8,12
+01/09/2024,Corgi HomePlan,Gas Products,77,53.6,79.4,67.7,79.4,76.9,49.4,518
+01/09/2024,Corgi HomePlan,Plumbing & Drains,72.5,46,75.5,69.7,77.8,70.7,50.7,30
+01/09/2024,Corgi HomePlan,Appliance Cover,85,60,80,67.5,80,85,82.5,4
+01/09/2024,Corgi HomePlan,Home Electrical,88.3,48.3,92.9,79.2,91.7,90,47.5,12
+01/10/2024,Corgi HomePlan,Gas Products,74.4,51.8,75.6,68.7,78.6,75.3,46.1,406
+01/10/2024,Corgi HomePlan,Plumbing & Drains,67.5,36.6,72.8,57.5,69.8,68.1,50.6,32
+01/10/2024,Corgi HomePlan,Appliance Cover,45,22,40,36,71,54,46,5
+01/10/2024,Corgi HomePlan,Home Electrical,76,49.3,78.7,64.7,80,78,50,15
+01/11/2024,Corgi HomePlan,Gas Products,78.2,56.6,81.1,69.9,80.9,78.5,51.3,204
+01/11/2024,Corgi HomePlan,Plumbing & Drains,73.6,41.9,77.1,71.9,75.7,71,51.4,21
+01/11/2024,Corgi HomePlan,Appliance Cover,,,,,,,,0
+01/11/2024,Corgi HomePlan,Home Electrical,76,72,90,84,74,82,38,5
