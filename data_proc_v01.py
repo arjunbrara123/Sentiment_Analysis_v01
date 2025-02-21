@@ -4,6 +4,9 @@ import os
 import time
 import datetime
 import re
+import asyncio
+import aiohttp
+import tiktoken
 from openai import OpenAI
 from transformers import pipeline
 #from dotenv import load_dotenv
@@ -23,7 +26,7 @@ with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ---------------------------------------------------
-# Fixed Prompts and Default Data
+# Prompts and Default Data
 # ---------------------------------------------------
 DEFAULT_SENTIMENT_PROMPT = (
     "You are a sentiment analysis expert. Your task is to assess customer reviews based on a specified aspect. "
@@ -51,6 +54,29 @@ COMPANY_PRODUCTS = {
     "Domestic & General": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"]
 }
 
+DEFAULT_COMPARISON_PROMPT = (
+    "You are an expert competitor analyst writing for senior board members. "
+    "Compare British Gas to {competitor} in the product category '{category}' for the aspect '{aspect}' in {year}. "
+    "The sentiment difference is {sentiment_diff:.2f} (positive means British Gas is better). "
+    "In one concise paragraph, state which company performs better, explain the key trend driving this based on the reviews trying to be as specific as possible, "
+    "and include 1-2 brief, specific review examples (paraphrased or quoted) that best show this trend. "
+    "Keep it focused, data-driven, and avoid waffle or vagueness. "
+    "Example: 'British Gas outperforms HomeServe by 0.34 in Engineer Experience. "
+    "Reviews highlight BG’s better skilled engineers as the primary driver for this big sentiment difference, e.g., ‘Fixed my boiler in one visit,’ while HomeServe’s are inconsistent, "
+    "e.g., ‘Engineer left it worse.’'"
+)
+
+DEFAULT_INSIGHTS_PROMPT = (
+    "You are an expert competitor analyst writing for senior board members. "
+    "Based on reviews for British Gas and {competitor} in the product category '{category}' for the aspect '{aspect}' in {year}, "
+    "where the sentiment difference is {sentiment_diff:.2f} (positive means British Gas is better), "
+    "provide one concise paragraph with 1-2 actionable insights British Gas can use to improve. "
+    "Focus on the biggest trend or difference from the data, make it clear every insight is grounded specifically in the reviews, "
+    "and include 1 brief, specific review example (paraphrased or quoted) per insight to build confidence. "
+    "Keep it focused, actionable, and avoid minor details or any vagueness. "
+    "Example: 'British Gas should ensure first-visit fixes, as HomeServe’s ‘3 visits to fix’ shows a gap we can avoid and seems to be a big theme driving the majority of the sentiment difference here. "
+    "Also, the data suggests maintain training—BG’s ‘knowledgeable staff’ is a strength driving a lot of the positive sentiment in the data, therefore something should double down on to further extend and improve this positive sentiment driver.'"
+)
 
 def generate_prod_prompt(company, selected_products_dict):
     prompt = f"You are a product analysis expert. Your task is to assess customer reviews for {company} and determine the most appropriate product category from the following options:\n"
@@ -124,6 +150,130 @@ def analyze_sentiment(review, aspect, prompt_template, model, temperature, max_t
     except Exception as e:
         return None, f"Error: {str(e)}"
 
+# ---------------------------------------------------
+# New Insights Functions
+# ---------------------------------------------------
+def count_tokens(text, model="gpt-4o-mini"):
+    enc = tiktoken.encoding_for_model(model)
+    return len(enc.encode(text))
+
+async def analyze_comparison(session, competitor, category, aspect, year, sentiment_diff, reviews, prompt_template, model, temperature, max_tokens):
+    messages = [
+        {"role": "system", "content": prompt_template.format(competitor=competitor, category=category, aspect=aspect, year=year, sentiment_diff=sentiment_diff)},
+        {"role": "user", "content": f"Analyze these reviews:\n\n{reviews}"}
+    ]
+    async with session.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}", "Content-Type": "application/json"},
+            json={"model": model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+    ) as response:
+        result = await response.json()
+        return result["choices"][0]["message"]["content"]
+
+async def analyze_insights(session, competitor, category, aspect, year, sentiment_diff, reviews, prompt_template, model, temperature, max_tokens):
+    messages = [
+        {"role": "system", "content": prompt_template.format(competitor=competitor, category=category, aspect=aspect, year=year, sentiment_diff=sentiment_diff)},
+        {"role": "user", "content": f"Analyze these reviews:\n\n{reviews}"}
+    ]
+    async with session.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}", "Content-Type": "application/json"},
+            json={"model": model, "messages": messages, "temperature": temperature, "max_tokens": max_tokens}
+    ) as response:
+        result = await response.json()
+        return result["choices"][0]["message"]["content"]
+
+async def process_insights(sentiment_df, reviews_df, output_filename, comparison_prompt, insights_prompt, model, temperature, max_tokens):
+    ASPECTS = ["Appointment Scheduling", "Customer Service", "Response Speed", "Engineer Experience", "Solution Quality", "Value For Money"]
+    YEAR = 2024
+    QUALITY_SCORE_THRESHOLD = 0.96
+    MAX_TOKENS_PER_CHUNK = 16000
+    WAIT_BETWEEN_CALLS = 1
+
+    sentiment_df['Year-Month'] = pd.to_datetime(sentiment_df['Year-Month'], format='%d/%m/%Y', errors='raise')
+    sentiment_df['Year'] = sentiment_df['Year-Month'].dt.year
+    sentiment_df = sentiment_df[sentiment_df["Year"] == YEAR]
+    reviews_df = reviews_df[reviews_df["Year"] == YEAR]
+
+    competitors = [c for c in sentiment_df["Company"].unique() if c != "British Gas"]
+    categories = sentiment_df["Final Product Category"].unique()
+    combinations = [(comp, cat, asp) for comp in competitors for cat in categories for asp in ASPECTS]
+
+    total_combinations = len(combinations)
+    output_cols = ["Competitor", "Product Line", "Aspect", "Sentiment Difference", "Year", "Analysis", "Key Insights"]
+    pd.DataFrame(columns=output_cols).to_csv(output_filename, index=False)
+
+    progress_bar = st.progress(0)
+    progress_text = st.empty()
+    preview_placeholder = st.empty()
+    start_time = time.time()
+    processed = 0
+
+    async with aiohttp.ClientSession() as session:
+        for i, (competitor, category, aspect) in enumerate(combinations):
+            try:
+                bg_sentiment = sentiment_df[(sentiment_df["Company"] == "British Gas") &
+                                            (sentiment_df["Final Product Category"] == category)].iloc[-1]
+                comp_sentiment = sentiment_df[(sentiment_df["Company"] == competitor) &
+                                              (sentiment_df["Final Product Category"] == category)].iloc[-1]
+                sentiment_diff = round(bg_sentiment[f"{aspect}_sentiment_score"] - comp_sentiment[f"{aspect}_sentiment_score"], 2)
+            except (IndexError, KeyError):
+                continue
+
+            bg_reviews = reviews_df[(reviews_df["Company"] == "British Gas") &
+                                    (reviews_df["Final Product Category"] == category) &
+                                    (reviews_df["review_weight"] >= QUALITY_SCORE_THRESHOLD)]
+            comp_reviews = reviews_df[(reviews_df["Company"] == competitor) &
+                                      (reviews_df["Final Product Category"] == category) &
+                                      (reviews_df["review_weight"] >= QUALITY_SCORE_THRESHOLD)]
+
+            if bg_reviews.empty or comp_reviews.empty:
+                continue
+
+            max_reviews_per_company = min(len(bg_reviews), len(comp_reviews))
+            tokens_per_review = 100
+            max_possible_reviews = (MAX_TOKENS_PER_CHUNK // 2) // tokens_per_review
+            num_reviews = min(max_reviews_per_company, max_possible_reviews)
+
+            bg_sample = bg_reviews.nlargest(num_reviews, "review_weight")["Review"].tolist()
+            comp_sample = comp_reviews.nlargest(num_reviews, "review_weight")["Review"].tolist()
+
+            combined_text = f"British Gas Reviews ({num_reviews}):\n{' '.join(bg_sample)}\n\n{competitor} Reviews ({num_reviews}):\n{' '.join(comp_sample)}"
+            total_tokens = count_tokens(combined_text)
+            if total_tokens > MAX_TOKENS_PER_CHUNK:
+                combined_text = combined_text[:MAX_TOKENS_PER_CHUNK * 4]
+
+            tasks = [
+                analyze_comparison(session, competitor, category, aspect, YEAR, sentiment_diff, combined_text, comparison_prompt, model, temperature, max_tokens),
+                analyze_insights(session, competitor, category, aspect, YEAR, sentiment_diff, combined_text, insights_prompt, model, temperature, max_tokens)
+            ]
+            analysis, insights = await asyncio.gather(*tasks)
+
+            result = {
+                "Competitor": competitor,
+                "Product Line": category,
+                "Aspect": aspect,
+                "Sentiment Difference": sentiment_diff,
+                "Year": YEAR,
+                "Analysis": analysis.strip(),
+                "Key Insights": insights.strip()
+            }
+            pd.DataFrame([result]).to_csv(output_filename, mode='a', header=False, index=False)
+
+            processed += 1
+            elapsed = time.time() - start_time
+            avg_time = elapsed / processed
+            remaining = avg_time * (total_combinations - processed)
+            progress_text.text(f"Processed {processed}/{total_combinations} combinations. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
+            progress_bar.progress(min(1.0, processed / total_combinations))
+
+            with preview_placeholder.container():
+                st.markdown("**Latest Output Preview:**")
+                st.table(pd.DataFrame([result]))
+
+            await asyncio.sleep(WAIT_BETWEEN_CALLS)
+
+    return total_combinations, time.time() - start_time
 
 # ---------------------------------------------------
 # Utility Functions
@@ -136,9 +286,10 @@ def create_output_filename(input_filename, analyses, output_folder):
     return os.path.join(output_folder if output_folder.strip() != "" else ".", filename)
 
 
-def check_csv_validity(file_df):
-    if "Review" not in file_df.columns:
-        return False, "CSV file must contain a column named 'Review'."
+def check_csv_validity(file_df, required_cols):
+    missing = [col for col in required_cols if col not in file_df.columns]
+    if missing:
+        return False, f"CSV missing required columns: {', '.join(missing)}."
     return True, ""
 
 
@@ -210,8 +361,8 @@ def run():
     # Dashboard Tabs with Emojis in Titles
     # ---------------------------------------------------
     st.markdown(f"# 🧮 Social Media Underlying Database")
-    tabs = st.tabs(["🧪 Data Cleaning", "🏗️ Run Setup", "🚗 Live Running View", "🪵 Run Log", "🧠 AI Config"])
-    cleaning_tab, setup_tab, output_tab, runlog_tab, config_tab = tabs
+    tabs = st.tabs(["🧪 Data Cleaning", "🏗️ Run Setup", "🚗 Live Running View", "🪵 Run Log", "🧠 AI Config", "🔮 Insights"])
+    cleaning_tab, setup_tab, output_tab, runlog_tab, config_tab, insights_tab = tabs
 
     # ===================================================
     # CONFIG TAB
@@ -246,7 +397,7 @@ def run():
         if cleaning_file is not None:
             try:
                 df_clean = pd.read_csv(cleaning_file)
-                valid, err_msg = check_csv_validity(df_clean)
+                valid, err_msg = check_csv_validity(df_clean, ["Review"])
                 if not valid:
                     st.error(err_msg)
                 else:
@@ -358,7 +509,7 @@ def run():
                                 st.error("Please upload a file.")
                             else:
                                 file_df = pd.read_csv(uploaded_file)
-                                valid, err_msg = check_csv_validity(file_df)
+                                valid, err_msg = check_csv_validity(file_df, ["Review"])
                                 if valid:
                                     st.session_state["file_df"] = file_df
                                     st.success("File validated successfully!")
@@ -369,7 +520,7 @@ def run():
                                 st.error("File path does not exist.")
                             else:
                                 file_df = pd.read_csv(input_file_path)
-                                valid, err_msg = check_csv_validity(file_df)
+                                valid, err_msg = check_csv_validity(file_df, ["Review"])
                                 if valid:
                                     st.session_state["file_df"] = file_df
                                     st.success("File validated successfully!")
@@ -578,5 +729,158 @@ def run():
                 st.error(f"Error reading run log: {e}")
         else:
             st.markdown("No run log available yet.")
+
+    # New Insights Tab
+    with insights_tab:
+        st.markdown("<div style='text-align:center;'><h1>🔮 Insights</h1></div>", unsafe_allow_html=True)
+        st.markdown("Generate competitive insights comparing British Gas to competitors based on sentiment and reviews.")
+
+        # Step 1: File Input
+        st.markdown("<hr style='border: 1px solid #0490d7;'>", unsafe_allow_html=True)
+        st.markdown("<h3>Step 1: File Input</h3>", unsafe_allow_html=True)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("**Sentiment Data**")
+            sentiment_input_method = st.radio("Select input method:", ["Upload File", "Enter File Path"], key="sentiment_input")
+            sentiment_file = None
+            sentiment_path = ""
+            if sentiment_input_method == "Upload File":
+                sentiment_file = st.file_uploader("Upload Sentiment CSV", type=["csv"], key="sentiment_file")
+            else:
+                sentiment_path = st.text_input("Enter Sentiment File Path:", key="sentiment_path", value="LLM SA Monthly Data.csv")
+        with col2:
+            st.markdown("**Reviews Data**")
+            reviews_input_method = st.radio("Select input method:", ["Upload File", "Enter File Path"], key="reviews_input")
+            reviews_file = None
+            reviews_path = ""
+            if reviews_input_method == "Upload File":
+                reviews_file = st.file_uploader("Upload Reviews CSV", type=["csv"], key="reviews_file")
+            else:
+                reviews_path = st.text_input("Enter Reviews File Path:", key="reviews_path", value="reviews_all.csv")
+
+        if st.button("Validate Files"):
+            try:
+                sentiment_df = pd.read_csv(sentiment_file) if sentiment_file else pd.read_csv(sentiment_path)
+                reviews_df = pd.read_csv(reviews_file) if reviews_file else pd.read_csv(reviews_path)
+                sentiment_valid, sentiment_err = check_csv_validity(sentiment_df, ["Company", "Final Product Category", "Year-Month"])
+                reviews_valid, reviews_err = check_csv_validity(reviews_df, ["Company", "Final Product Category", "Review", "review_weight", "Year"])
+                if not sentiment_valid:
+                    st.error(sentiment_err)
+                elif not reviews_valid:
+                    st.error(reviews_err)
+                else:
+                    st.session_state["insights_sentiment_df"] = sentiment_df
+                    st.session_state["insights_reviews_df"] = reviews_df
+                    st.success("Files validated successfully!")
+                    st.markdown("**Sentiment Preview:**")
+                    st.dataframe(sentiment_df.head())
+                    st.markdown("**Reviews Preview:**")
+                    st.dataframe(reviews_df.head())
+            except Exception as e:
+                st.error(f"Error validating files: {e}")
+
+        # Step 2: Config Prompts
+        if "insights_sentiment_df" in st.session_state and "insights_reviews_df" in st.session_state:
+            st.markdown("<hr style='border: 1px solid #0490d7;'>", unsafe_allow_html=True)
+            st.markdown("<h3>Step 2: Configure Prompts</h3>", unsafe_allow_html=True)
+            comparison_prompt = st.text_area("Comparison Prompt:", value=DEFAULT_COMPARISON_PROMPT, height=200)
+            insights_prompt = st.text_area("Insights Prompt:", value=DEFAULT_INSIGHTS_PROMPT, height=200)
+            output_folder = st.text_input("Output Folder (leave blank for current folder):", value="")
+            api_config = st.session_state.get("api_config", {"selected_model": "gpt-4o-mini", "temperature": 0.2, "max_tokens": 200})
+
+            if st.button("Preview First Combination"):
+                sentiment_df = st.session_state["insights_sentiment_df"]
+                reviews_df = st.session_state["insights_reviews_df"]
+                first_combination = [(comp, cat, asp) for comp in [c for c in sentiment_df["Company"].unique() if c != "British Gas"]
+                                    for cat in sentiment_df["Final Product Category"].unique()
+                                    for asp in ["Appointment Scheduling"]][0]  # Preview one aspect
+                competitor, category, aspect = first_combination
+
+                try:
+                    bg_sentiment = sentiment_df[(sentiment_df["Company"] == "British Gas") &
+                                                (sentiment_df["Final Product Category"] == category)].iloc[-1]
+                    comp_sentiment = sentiment_df[(sentiment_df["Company"] == competitor) &
+                                                  (sentiment_df["Final Product Category"] == category)].iloc[-1]
+                    sentiment_diff = round(bg_sentiment[f"{aspect}_sentiment_score"] - comp_sentiment[f"{aspect}_sentiment_score"], 2)
+                except (IndexError, KeyError):
+                    st.error("No sentiment data for first combination.")
+                    return
+
+                bg_reviews = reviews_df[(reviews_df["Company"] == "British Gas") &
+                                        (reviews_df["Final Product Category"] == category) &
+                                        (reviews_df["review_weight"] >= 0.96)]
+                comp_reviews = reviews_df[(reviews_df["Company"] == competitor) &
+                                          (reviews_df["Final Product Category"] == category) &
+                                          (reviews_df["review_weight"] >= 0.96)]
+
+                if not bg_reviews.empty and not comp_reviews.empty:
+                    num_reviews = min(min(len(bg_reviews), len(comp_reviews)), (16000 // 2) // 100)
+                    bg_sample = bg_reviews.nlargest(num_reviews, "review_weight")["Review"].tolist()
+                    comp_sample = comp_reviews.nlargest(num_reviews, "review_weight")["Review"].tolist()
+                    combined_text = f"British Gas Reviews ({num_reviews}):\n{' '.join(bg_sample)}\n\n{competitor} Reviews ({num_reviews}):\n{' '.join(comp_sample)}"
+
+                    async def preview():
+                        async with aiohttp.ClientSession() as session:
+                            tasks = [
+                                analyze_comparison(session, competitor, category, aspect, 2024, sentiment_diff, combined_text,
+                                                  comparison_prompt, api_config["selected_model"], api_config["temperature"], api_config["max_tokens"]),
+                                analyze_insights(session, competitor, category, aspect, 2024, sentiment_diff, combined_text,
+                                                 insights_prompt, api_config["selected_model"], api_config["temperature"], api_config["max_tokens"])
+                            ]
+                            return await asyncio.gather(*tasks)
+
+                    analysis, insights = asyncio.run(preview())
+                    preview_result = {
+                        "Competitor": competitor,
+                        "Product Line": category,
+                        "Aspect": aspect,
+                        "Sentiment Difference": sentiment_diff,
+                        "Year": 2024,
+                        "Analysis": analysis.strip(),
+                        "Key Insights": insights.strip()
+                    }
+                    st.markdown("**Preview of First Combination:**")
+                    st.table(pd.DataFrame([preview_result]))
+                    st.session_state["insights_preview"] = preview_result
+                    st.session_state["insights_config"] = {
+                        "sentiment_df": sentiment_df,
+                        "reviews_df": reviews_df,
+                        "comparison_prompt": comparison_prompt,
+                        "insights_prompt": insights_prompt,
+                        "output_folder": output_folder,
+                        "model": api_config["selected_model"],
+                        "temperature": api_config["temperature"],
+                        "max_tokens": api_config["max_tokens"]
+                    }
+
+        # Step 3: Run Full Process
+        if "insights_config" in st.session_state and st.button("Run Full Analysis"):
+            st.error("Temporarily Offline")
+            # config = st.session_state["insights_config"]
+            # sentiment_input = sentiment_file.name if sentiment_file else sentiment_path
+            # reviews_input = reviews_file.name if reviews_file else reviews_path
+            # output_filename = create_output_filename(sentiment_input, config["output_folder"])
+            # with st.spinner("Processing insights..."):
+            #     total_combinations, total_time = asyncio.run(process_insights(
+            #         config["sentiment_df"], config["reviews_df"], output_filename,
+            #         config["comparison_prompt"], config["insights_prompt"],
+            #         config["model"], config["temperature"], config["max_tokens"]
+            #     ))
+            #     st.success(f"Completed in {str(datetime.timedelta(seconds=int(total_time)))}")
+            #     run_info = {
+            #         "Input File": f"{sentiment_input}, {reviews_input}",
+            #         "Output File": os.path.basename(output_filename),
+            #         "Run Date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            #         "Total Rows": total_combinations,
+            #         "Rows Processed": total_combinations,
+            #         "Analyses": "insights",
+            #         "Model": config["model"],
+            #         "Temperature": config["temperature"],
+            #         "Max Tokens": config["max_tokens"],
+            #         "Processing Time (s)": int(total_time)
+            #     }
+            #     update_run_log(run_info)
+            # with open(output_filename, "rb") as file:
+            #     st.download_button(label="⬇️ Download Insights CSV", data=file, file_name=os.path.basename(output_filename), mime="text/csv")
 
 #run()
