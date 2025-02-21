@@ -82,7 +82,7 @@ market_summary_data = load_market_summary("LLM Market Summary.csv")
 with st.sidebar:
     st.sidebar.image("company_logo.png")
 
-    with st.expander("🏫 Select Competitor / Product", expanded=False):
+    with st.expander("🏫 Select Competitor", expanded=False):
         mode = st.radio(
             "Select Mode",
             options=["🏢 Company Mode", "🎍 Market Mode"],
@@ -101,8 +101,9 @@ with st.sidebar:
         else:
             selected_company = ""
 
+    with st.expander(("🎁 Select Product" if mode == "🏢 Company Mode" else "🛖 Select Market"), expanded=False):
         selected_product = st.radio(
-            "Please Select a Product",
+            "Please Select a " + (" Product" if mode == "🏢 Company Mode" else " Market"),
             options = prod_option_list,
             index=0
         )
@@ -135,7 +136,7 @@ with st.sidebar:
     if filter_year != "All":
         sa_monthly_data = sa_monthly_data[sa_monthly_data['Year-Month'].str[-4:] == str(filter_year)]
 
-    with st.expander("⚙️ Settings", expanded=False):
+    with st.expander("🧠 AI Settings", expanded=False):
         tts_flag = st.toggle("Alice Reads Responses Aloud", value=False)
         dev_mode = st.toggle("Dev Mode", value=False)
         dev_flag = False
