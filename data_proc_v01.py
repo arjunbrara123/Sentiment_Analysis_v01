@@ -43,7 +43,8 @@ PRODUCT_DESCRIPTIONS = {
     "Appliance Cover": "Insurance for home appliances like ovens, washing machines, etc.",
     "Home Electrical": "Covers issues with home electrics, wiring, fusebox breakdowns, and broken sockets.",
     "Plumbing and Drains": "Covers plumbing repairs such as blocked drains or frozen pipes.",
-    "Building": "General building services."
+    "Building": "General building services.",
+    "Pest Control": "Removal of a pest infestation in the home, eg. Wasps and hornets nests, mice or rat infestation."
 }
 
 COMPANY_PRODUCTS = {
@@ -51,7 +52,8 @@ COMPANY_PRODUCTS = {
     "HomeServe": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
     "CheckATrade": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
     "Corgi HomePlan": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
-    "Domestic & General": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"]
+    "Domestic & General": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
+    "247 Home Rescue": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical", "Pest Control"]
 }
 
 DEFAULT_COMPARISON_PROMPT = (
