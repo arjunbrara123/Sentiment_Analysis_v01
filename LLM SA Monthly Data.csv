@@ -387,37 +387,47 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/01/2025,CheckATrade,Plumbing & Drains,41,9,37,28,40,40,35,32
 01/01/2025,CheckATrade,Home Electrical,94,86,94,91,94,93,84,7
 01/01/2025,CheckATrade,Heating,0,0,0,0,0,0,0,0
-01/02/2022,Domestic & General,Appliance Cover,39,32,42,37,41,41,25,49
-01/03/2022,Domestic & General,Appliance Cover,49,27,50,42,50,49,35,371
-01/04/2022,Domestic & General,Appliance Cover,47,27,46,41,47,46,34,302
-01/05/2022,Domestic & General,Appliance Cover,50,33,51,43,53,49,35,277
-01/06/2022,Domestic & General,Appliance Cover,48,28,49,42,49,47,31,320
-01/07/2022,Domestic & General,Appliance Cover,54,35,56,51,55,53,41,341
-01/08/2022,Domestic & General,Appliance Cover,49,30,50,42,50,48,34,348
-01/09/2022,Domestic & General,Appliance Cover,48,24,49,41,49,48,35,354
-01/10/2022,Domestic & General,Appliance Cover,39,20,39,31,43,39,24,388
-01/11/2022,Domestic & General,Appliance Cover,38,21,40,33,41,37,23,447
-01/12/2022,Domestic & General,Appliance Cover,35,19,35,30,37,34,21,452
-01/01/2023,Domestic & General,Appliance Cover,34,19,34,29,36,34,18,512
-01/02/2023,Domestic & General,Appliance Cover,43,25,43,35,45,42,27,586
-01/03/2023,Domestic & General,Appliance Cover,43,27,44,39,45,41,28,522
-01/04/2023,Domestic & General,Appliance Cover,37,19,38,32,40,37,22,254
-01/05/2023,Domestic & General,Appliance Cover,38,16,38,28,39,37,23,272
-01/06/2023,Domestic & General,Appliance Cover,45,30,45,42,44,44,29,281
-01/07/2023,Domestic & General,Appliance Cover,41,24,42,39,40,41,29,292
-01/08/2023,Domestic & General,Appliance Cover,40,22,40,35,42,38,28,326
-01/09/2023,Domestic & General,Appliance Cover,43,28,43,37,45,41,27,336
-01/10/2023,Domestic & General,Appliance Cover,33,16,35,28,32,32,20,330
-01/11/2023,Domestic & General,Appliance Cover,26,8,27,20,29,26,13,380
-01/12/2023,Domestic & General,Appliance Cover,35,18,35,30,35,34,20,368
-01/01/2024,Domestic & General,Appliance Cover,31,13,33,28,31,32,22,182
-01/02/2024,Domestic & General,Appliance Cover,27,6,28,20,26,27,15,184
-01/03/2024,Domestic & General,Appliance Cover,25,7,25,23,25,25,17,113
-01/04/2024,Domestic & General,Appliance Cover,39,15,39,30,35,38,25,186
-01/05/2024,Domestic & General,Appliance Cover,44,29,44,39,42,40,29,164
-01/06/2024,Domestic & General,Appliance Cover,44,25,44,37,43,44,29,159
-01/07/2024,Domestic & General,Appliance Cover,48,26,47,42,45,47,35,196
-01/08/2024,Domestic & General,Appliance Cover,55,34,56,48,50,55,39,196
-01/09/2024,Domestic & General,Appliance Cover,51,35,51,45,48,50,35,188
-01/10/2024,Domestic & General,Appliance Cover,45,24,46,41,44,44,33,224
-01/11/2024,Domestic & General,Appliance Cover,27,10,27,22,24,25,15,98
+01/01/2024,Domestic & General,Appliance Cover,28,13.2,29.8,25.9,27.7,28.3,20.1,136
+01/01/2024,Domestic & General,Gas Products,46,27.1,49,37.9,50.8,46.7,27.5,24
+01/01/2024,Domestic & General,Plumbing & Drains,,,,,,,,0
+01/01/2024,Domestic & General,Home Electrical,92.5,0,95,85,50,90,80,2
+01/02/2024,Domestic & General,Appliance Cover,22.1,1.9,23.4,16.9,20.7,22,10.9,152
+01/02/2024,Domestic & General,Gas Products,63.2,40,66.4,45.5,64.1,60,40.9,11
+01/02/2024,Domestic & General,Plumbing & Drains,,,,,,,,0
+01/02/2024,Domestic & General,Home Electrical,52.5,15,25,20,55,70,15,2
+01/03/2024,Domestic & General,Appliance Cover,29.8,11.9,29.6,29.4,29.7,29.9,21.9,83
+01/03/2024,Domestic & General,Gas Products,-17.1,-30,-17.1,-14.3,-17.1,-18.6,-32.9,7
+01/03/2024,Domestic & General,Plumbing & Drains,-90,-100,-90,-90,-90,-90,-100,1
+01/03/2024,Domestic & General,Home Electrical,90,93.3,90,86.7,90,90,76.7,3
+01/04/2024,Domestic & General,Appliance Cover,39.9,15.6,40.3,32.2,37.1,39.4,27.3,140
+01/04/2024,Domestic & General,Gas Products,50,18.1,51.3,31.9,45,44.4,32.5,16
+01/04/2024,Domestic & General,Plumbing & Drains,-90,-90,-90,-90,-90,-90,-90,1
+01/04/2024,Domestic & General,Home Electrical,10,20,8,18,14,14,-8,5
+01/05/2024,Domestic & General,Appliance Cover,44,29.1,43.4,38.1,41.8,40.7,30.4,121
+01/05/2024,Domestic & General,Gas Products,43.2,29.5,45.3,46.3,37.1,41.1,28.9,19
+01/05/2024,Domestic & General,Plumbing & Drains,-23.3,-26.7,-23.3,-23.3,-23.3,-26.7,-30,3
+01/05/2024,Domestic & General,Home Electrical,13.3,-26.7,16.7,23.3,16.7,13.3,-26.7,3
+01/06/2024,Domestic & General,Appliance Cover,46.5,23.6,46.2,39.7,45.1,47.7,31.9,109
+01/06/2024,Domestic & General,Gas Products,52.7,51.4,54.8,52.3,55,53.2,39.1,22
+01/06/2024,Domestic & General,Plumbing & Drains,-31.7,-30,-30,-26.7,-26.7,-30,-30,3
+01/06/2024,Domestic & General,Home Electrical,90,80,90,90,100,90,70,1
+01/07/2024,Domestic & General,Appliance Cover,51.1,28.3,51.1,44.8,48,50.4,36.2,144
+01/07/2024,Domestic & General,Gas Products,34.7,18.9,36.3,32.6,35.8,32.6,23.2,19
+01/07/2024,Domestic & General,Plumbing & Drains,,,,,,,,0
+01/07/2024,Domestic & General,Home Electrical,7.5,-10,10,2.5,7.5,-2.5,0,4
+01/08/2024,Domestic & General,Appliance Cover,54.7,34.3,55.8,47.8,48.5,54.9,38.5,136
+01/08/2024,Domestic & General,Gas Products,68,35,68,50.5,68.9,67.3,53.2,22
+01/08/2024,Domestic & General,Plumbing & Drains,,,,,,,,0
+01/08/2024,Domestic & General,Home Electrical,42.5,40,42.5,40,42.5,37.5,2.5,4
+01/09/2024,Domestic & General,Appliance Cover,50.4,33.5,51.3,44.7,47.2,50.6,35.4,131
+01/09/2024,Domestic & General,Gas Products,43.2,23.7,37.9,21.6,49.5,42.1,17.9,19
+01/09/2024,Domestic & General,Plumbing & Drains,80,50,80,80,80,80,100,1
+01/09/2024,Domestic & General,Home Electrical,85,90,87.5,85,85,85,75,2
+01/10/2024,Domestic & General,Appliance Cover,45.8,26.6,47.5,40.5,45.8,45.7,35.8,153
+01/10/2024,Domestic & General,Gas Products,58.8,27.7,58.5,53.7,60.7,53,32.7,30
+01/10/2024,Domestic & General,Plumbing & Drains,-70,-50,-70,-50,-70,-70,-70,1
+01/10/2024,Domestic & General,Home Electrical,51,0,50,52,34,50,48,5
+01/11/2024,Domestic & General,Appliance Cover,25.7,8,25.6,21,20.8,24.9,13.6,78
+01/11/2024,Domestic & General,Gas Products,1.7,-10,-1.1,0,18.9,0,-3.3,9
+01/11/2024,Domestic & General,Plumbing & Drains,70,45,80,80,80,80,65,2
+01/11/2024,Domestic & General,Home Electrical,,,,,,,,0
