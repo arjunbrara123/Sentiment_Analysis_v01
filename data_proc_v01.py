@@ -41,7 +41,7 @@ PRODUCT_DESCRIPTIONS = {
     "Gas Products": "Covers boiler insurance, home care, annual service visits, or any instances where engineers visit to service or repair boilers or hot water systems.",
     "Energy": "Relates to energy/electricity supply including tariffs, smart meters, and billing issues.",
     "Appliance Cover": "Insurance for home appliances like ovens, washing machines, etc.",
-    "Home Electrical": "Covers issues with home electrics, wiring, fusebox breakdowns, and broken sockets.",
+    "Home Electrical": "Covers issues with home electrics such as, wiring, fusebox breakdowns, and broken sockets.",
     "Plumbing and Drains": "Covers plumbing repairs such as blocked drains or frozen pipes.",
     "Building": "General building services.",
     "Pest Control": "Removal of a pest infestation in the home, eg. Wasps and hornets nests, mice or rat infestation."
