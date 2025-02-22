@@ -350,7 +350,8 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
             f"Processed {idx} of {total_reviews} reviews. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Estimated remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
         progress_value = min(1.0, (idx) / total_reviews)
         progress_bar.progress(progress_value)
-    st.table(processed_rows)
+    with st.expander("✅ Successfully Processed Results..."):
+        st.table(processed_rows)
     total_time = time.time() - start_time
     return processed_rows, total_time
 
