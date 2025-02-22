@@ -350,10 +350,7 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
             f"Processed {idx + 1} of {total_reviews} reviews. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Estimated remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
         progress_value = min(1.0, (idx + 1) / total_reviews)
         progress_bar.progress(progress_value)
-        if (idx + 1) % 100 == 0:
-            st.session_state["latest_preview"] = pd.DataFrame(processed_rows[-100:])
-            with st.expander("😶‍🌫️ Results Preview"):
-                st.table(pd.DataFrame(processed_rows))
+        st.table(processed_rows)
     total_time = time.time() - start_time
     return processed_rows, total_time
 
