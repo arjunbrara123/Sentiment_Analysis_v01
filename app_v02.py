@@ -357,34 +357,29 @@ elif mode == "🎍 Market Mode" and not dev_flag:
     # Loop over the aspects and fill each tab with its respective chart and a placeholder
     for idx, aspect in enumerate(aspects):
         with tabs[idx]:
-            st.markdown(f"## {aspects_map[aspect]}")
+            
+            # Call the new plotting function; the title can be dynamically built
+            plot_chart_3(
+                product=product_name,
+                aspect=aspect,
+                title=f"{aspects_map[aspect]} Market Sentiment Trends",
+                desc="",
+                data=sa_monthly_data
+            )
 
-            chart_col, insight_col = st.columns([5,2])
+            # Retrieve the corresponding analysis from the market summary
+            filtered_analysis = market_summary_data[
+                (market_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year))) &  # Only use data from that year
+                (market_summary_data["Product"] == product_name) &  # Match product
+                (market_summary_data["Aspect"] == aspect)  # Match aspect
+            ]
 
-            with chart_col:
-                # Call the new plotting function; the title can be dynamically built
-                plot_chart_3(
-                    product=product_name,
-                    aspect=aspect,
-                    title=f"{aspects_map[aspect]} Market Sentiment Trends",
-                    desc="",
-                    data=sa_monthly_data
-                )
-
-            with insight_col:
-                # Retrieve the corresponding analysis from the market summary
-                filtered_analysis = market_summary_data[
-                    (market_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year))) &  # Only use data from that year
-                    (market_summary_data["Product"] == product_name) &  # Match product
-                    (market_summary_data["Aspect"] == aspect)  # Match aspect
-                ]
-
-                # Display the analysis if available
-                if not filtered_analysis.empty:
-                    analysis_text = filtered_analysis.iloc[0]["Analysis"]
-                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
-                else:
-                    st.markdown("No market insights available for this aspect.")
+            # Display the analysis if available
+            if not filtered_analysis.empty:
+                analysis_text = filtered_analysis.iloc[0]["Analysis"]
+                st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+            else:
+                st.markdown("No market insights available for this aspect.")
 
 elif dev_flag:
     data_proc_v01.run()
