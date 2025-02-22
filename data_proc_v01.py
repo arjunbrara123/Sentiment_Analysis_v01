@@ -344,13 +344,13 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
             pd.DataFrame([result_row]).to_csv(output_filename, mode='a', header=False, index=False)
             processed_rows.append(result_row)
         elapsed = time.time() - start_time
-        avg_time = elapsed / (idx + 1)
+        avg_time = elapsed / (idx)
         remaining = avg_time * (total_reviews - idx - 1)
         progress_text.text(
-            f"Processed {idx + 1} of {total_reviews} reviews. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Estimated remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
-        progress_value = min(1.0, (idx + 1) / total_reviews)
+            f"Processed {idx} of {total_reviews} reviews. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Estimated remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
+        progress_value = min(1.0, (idx) / total_reviews)
         progress_bar.progress(progress_value)
-        st.table(processed_rows)
+    st.table(processed_rows)
     total_time = time.time() - start_time
     return processed_rows, total_time
 
