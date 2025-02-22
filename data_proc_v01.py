@@ -283,7 +283,7 @@ async def process_insights(sentiment_df, reviews_df, output_filename, comparison
 def create_output_filename(input_filename, analyses, output_folder):
     base = os.path.splitext(os.path.basename(input_filename))[0] if input_filename else "uploaded_file"
     analyses_str = "_".join(analyses)
-    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
     filename = f"{base}_{analyses_str}_{timestamp}.csv"
     return os.path.join(output_folder if output_folder.strip() != "" else ".", filename)
 
