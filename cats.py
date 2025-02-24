@@ -37,6 +37,7 @@ company_emoji_map = {
     "OVO": "⚡ OVO",
 }
 product_emoji_map = {
+    "All": "🌎 All",
     "Gas Products": "🚿 Gas Products",
     "Energy": "⚡ Energy",
     "Plumbing & Drains": "🪠 Plumbing & Drains",
