@@ -88,6 +88,7 @@ def generate_prod_prompt(company, selected_products_dict):
         i += 1
     prompt += "\n### Guidance:\n"
     prompt += "- Look for keywords or scenarios that hint at the correct category.\n"
+    prompt += "- If you are unsure, mark the product type as 'Unknown', but make every effort to try and allocate one of the given product categories and only mark as Unknown if you have to.\n"
     prompt += "- Include a confidence score between 0 and 100.\n"
     prompt += "Provide the output in this exact format:\n"
     prompt += "Score: <numeric_value>\nProduct: <product_type>\nReason: <brief_explanation>"
@@ -185,9 +186,9 @@ async def analyze_insights(session, competitor, category, aspect, year, sentimen
         result = await response.json()
         return result["choices"][0]["message"]["content"]
 
-async def process_insights(sentiment_df, reviews_df, output_filename, comparison_prompt, insights_prompt, model, temperature, max_tokens):
+async def process_insights(sentiment_df, reviews_df, output_filename, comparison_prompt, insights_prompt, model, temperature, max_tokens, active_year):
     ASPECTS = ["Appointment Scheduling", "Customer Service", "Response Speed", "Engineer Experience", "Solution Quality", "Value For Money"]
-    YEAR = 2024
+    YEAR = active_year
     QUALITY_SCORE_THRESHOLD = 0.96
     MAX_TOKENS_PER_CHUNK = 16000
     WAIT_BETWEEN_CALLS = 1
@@ -195,7 +196,8 @@ async def process_insights(sentiment_df, reviews_df, output_filename, comparison
     sentiment_df['Year-Month'] = pd.to_datetime(sentiment_df['Year-Month'], format='%d/%m/%Y', errors='raise')
     sentiment_df['Year'] = sentiment_df['Year-Month'].dt.year
     sentiment_df = sentiment_df[sentiment_df["Year"] == YEAR]
-    reviews_df = reviews_df[reviews_df["Year"] == YEAR]
+    if YEAR != "All":
+        reviews_df = reviews_df[reviews_df["Year"] == YEAR]
 
     competitors = [c for c in sentiment_df["Company"].unique() if c != "British Gas"]
     categories = sentiment_df["Final Product Category"].unique()
@@ -283,7 +285,7 @@ async def process_insights(sentiment_df, reviews_df, output_filename, comparison
 def create_output_filename(input_filename, analyses, output_folder):
     base = os.path.splitext(os.path.basename(input_filename))[0] if input_filename else "uploaded_file"
     analyses_str = "_".join(analyses)
-    timestamp = datetime.datetime.now().strftime("%Y.%m.%d-%H.%M.%S")
+    timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{base}_{analyses_str}_{timestamp}.csv"
     return os.path.join(output_folder if output_folder.strip() != "" else ".", filename)
 
@@ -345,7 +347,7 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
             processed_rows.append(result_row)
         elapsed = time.time() - start_time
         avg_time = elapsed / (idx)
-        remaining = avg_time * (total_reviews - idx - 1)
+        remaining = avg_time * (total_reviews - idx)
         progress_text.text(
             f"Processed {idx} of {total_reviews} reviews. Elapsed: {str(datetime.timedelta(seconds=int(elapsed)))} | Estimated remaining: {str(datetime.timedelta(seconds=int(remaining)))}")
         progress_value = min(1.0, (idx) / total_reviews)
@@ -355,7 +357,7 @@ def process_reviews(file_df, output_filename, prod_prompt, sentiment_prompt,
     total_time = time.time() - start_time
     return processed_rows, total_time
 
-def run():
+def run(active_year):
 
     # ---------------------------------------------------
     # Dashboard Tabs with Emojis in Titles
@@ -822,9 +824,9 @@ def run():
                     async def preview():
                         async with aiohttp.ClientSession() as session:
                             tasks = [
-                                analyze_comparison(session, competitor, category, aspect, 2024, sentiment_diff, combined_text,
+                                analyze_comparison(session, competitor, category, aspect, active_year, sentiment_diff, combined_text,
                                                   comparison_prompt, api_config["selected_model"], api_config["temperature"], api_config["max_tokens"]),
-                                analyze_insights(session, competitor, category, aspect, 2024, sentiment_diff, combined_text,
+                                analyze_insights(session, competitor, category, aspect, active_year, sentiment_diff, combined_text,
                                                  insights_prompt, api_config["selected_model"], api_config["temperature"], api_config["max_tokens"])
                             ]
                             return await asyncio.gather(*tasks)
@@ -835,7 +837,7 @@ def run():
                         "Product Line": category,
                         "Aspect": aspect,
                         "Sentiment Difference": sentiment_diff,
-                        "Year": 2024,
+                        "Year": active_year,
                         "Analysis": analysis.strip(),
                         "Key Insights": insights.strip()
                     }
@@ -855,32 +857,31 @@ def run():
 
         # Step 3: Run Full Process
         if "insights_config" in st.session_state and st.button("Run Full Analysis"):
-            st.error("Temporarily Offline")
-            # config = st.session_state["insights_config"]
-            # sentiment_input = sentiment_file.name if sentiment_file else sentiment_path
-            # reviews_input = reviews_file.name if reviews_file else reviews_path
-            # output_filename = create_output_filename(sentiment_input, config["output_folder"])
-            # with st.spinner("Processing insights..."):
-            #     total_combinations, total_time = asyncio.run(process_insights(
-            #         config["sentiment_df"], config["reviews_df"], output_filename,
-            #         config["comparison_prompt"], config["insights_prompt"],
-            #         config["model"], config["temperature"], config["max_tokens"]
-            #     ))
-            #     st.success(f"Completed in {str(datetime.timedelta(seconds=int(total_time)))}")
-            #     run_info = {
-            #         "Input File": f"{sentiment_input}, {reviews_input}",
-            #         "Output File": os.path.basename(output_filename),
-            #         "Run Date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            #         "Total Rows": total_combinations,
-            #         "Rows Processed": total_combinations,
-            #         "Analyses": "insights",
-            #         "Model": config["model"],
-            #         "Temperature": config["temperature"],
-            #         "Max Tokens": config["max_tokens"],
-            #         "Processing Time (s)": int(total_time)
-            #     }
-            #     update_run_log(run_info)
-            # with open(output_filename, "rb") as file:
-            #     st.download_button(label="⬇️ Download Insights CSV", data=file, file_name=os.path.basename(output_filename), mime="text/csv")
+            config = st.session_state["insights_config"]
+            sentiment_input = sentiment_file.name if sentiment_file else sentiment_path
+            reviews_input = reviews_file.name if reviews_file else reviews_path
+            output_filename = create_output_filename(sentiment_input, config["output_folder"])
+            with st.spinner("Processing insights..."):
+                total_combinations, total_time = asyncio.run(process_insights(
+                    config["sentiment_df"], config["reviews_df"], output_filename,
+                    config["comparison_prompt"], config["insights_prompt"],
+                    config["model"], config["temperature"], config["max_tokens"], active_year
+                ))
+                st.success(f"Completed in {str(datetime.timedelta(seconds=int(total_time)))}")
+                run_info = {
+                    "Input File": f"{sentiment_input}, {reviews_input}",
+                    "Output File": os.path.basename(output_filename),
+                    "Run Date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "Total Rows": total_combinations,
+                    "Rows Processed": total_combinations,
+                    "Analyses": "insights",
+                    "Model": config["model"],
+                    "Temperature": config["temperature"],
+                    "Max Tokens": config["max_tokens"],
+                    "Processing Time (s)": int(total_time)
+                }
+                update_run_log(run_info)
+            with open(output_filename, "rb") as file:
+                st.download_button(label="⬇️ Download Insights CSV", data=file, file_name=os.path.basename(output_filename), mime="text/csv")
 
 #run()
