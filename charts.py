@@ -119,7 +119,7 @@ def style_chart(fig):
         title_y=0.93, title_x=0.0,
         paper_bgcolor="white", plot_bgcolor="white",
         legend_title = " Legend",
-        template="plotly_white", height=600, hovermode="x",
+        template="plotly_white", height=600, hovermode="closest",
         legend=dict(bgcolor="white", bordercolor="#0490d7", borderwidth=1),
         xaxis=dict(title_font=dict(family="Arial, sans-serif", size=16, color="#012973")),
         yaxis=dict(title_font=dict(family="Arial, sans-serif", size=16, color="#012973")),
@@ -261,7 +261,7 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
                     y=data_grouped[aspect_column],
                     mode="lines+markers",
                     name=aspects_map[aspect],  # Legend will display the aspect name
-                    hovertemplate=f"<b>{aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
+                    hovertemplate=f"%{{y:.0f}}<br>", #<b>{aspect} Sentiment Score:</b> 
                     line=dict(width=2)  # Keep the lines clean and simple
                 )
             )
@@ -272,7 +272,7 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
                 y=data_grouped["Sentiment Score"],
                 mode="lines+markers",
                 name="Overall Sentiment",
-                hovertemplate="<b>Overall Sentiment Score:</b> %{y:.2f}<br>",
+                hovertemplate="%{y:.0f}<br>", #<b>Overall Sentiment Score:</b> 
                 line=dict(width=2)
             )
         )
@@ -350,7 +350,7 @@ def plot_chart_3(product, aspect, title, desc, data):
                 y=competitor_grouped[sentiment_column],
                 mode="lines+markers",
                 name=competitor,
-                hovertemplate=f"<b>{competitor} {aspect} Sentiment Score:</b> %{{y:.2f}}<br>",
+                hovertemplate=f"%{{y:.0f}}<br>", #<b>{competitor} {aspect} Sentiment Score:</b> 
                 line=dict(width=2)
             )
         )
