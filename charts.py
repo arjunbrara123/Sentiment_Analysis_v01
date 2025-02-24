@@ -251,18 +251,35 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
 
     # Create a Plotly figure
     fig = go.Figure()
-    print("View: " + view)
     if view == "aspect":
         # Add a line trace for each aspect
         for aspect, aspect_column in zip(aspects, aspect_columns):
+
+            # Get the last data point for positioning the emoji
+            last_point = data_grouped[aspect_column].iloc[-1]
+            last_date = data_grouped["Year-Month"].iloc[-1]
+
             fig.add_trace(
                 go.Scatter(
                     x=data_grouped["Year-Month"],
                     y=data_grouped[aspect_column],
-                    mode="lines+markers",
+                    mode="lines+markers", #"lines+markers",
                     name=aspects_map[aspect],  # Legend will display the aspect name
-                    hovertemplate=f"%{{y:.0f}}<br>", #<b>{aspect} Sentiment Score:</b> 
+                    hovertemplate=f"%{{y:.0f}}<br>", #<b>{aspect} Sentiment Score:</b>
                     line=dict(width=2)  # Keep the lines clean and simple
+                )
+            )
+            # Add a separate trace for the emoji, placed near the last data point.  This is the KEY change.
+            fig.add_trace(
+                go.Scatter(
+                    x=[last_date],
+                    y=[last_point],
+                    mode="markers+text",
+                    text=[aspects_map[aspect]],  # Use emoji directly
+                    textposition="middle right",
+                    marker=dict(size=15, color='rgba(0,0,0,0)'),  # Invisible marker
+                    showlegend=False,  # Don't show this in the legend
+                    hoverinfo='skip' # Remove hover
                 )
             )
     elif view == "sentiment":
@@ -272,7 +289,7 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
                 y=data_grouped["Sentiment Score"],
                 mode="lines+markers",
                 name="Overall Sentiment",
-                hovertemplate="%{y:.0f}<br>", #<b>Overall Sentiment Score:</b> 
+                hovertemplate="%{y:.2f}<br>", #<b>Overall Sentiment Score:</b>
                 line=dict(width=2)
             )
         )
@@ -350,7 +367,7 @@ def plot_chart_3(product, aspect, title, desc, data):
                 y=competitor_grouped[sentiment_column],
                 mode="lines+markers",
                 name=competitor,
-                hovertemplate=f"%{{y:.0f}}<br>", #<b>{competitor} {aspect} Sentiment Score:</b> 
+                hovertemplate=f" %{{y:.2f}}<br>", #<b>{competitor} {aspect} Sentiment Score:</b>
                 line=dict(width=2)
             )
         )
@@ -486,6 +503,102 @@ def plot_aspect_comparison(product, aspect, company, title, desc, data, height=2
     # Display the chart.
     st.plotly_chart(fig, use_container_width=True)
 
+def plot_product_sentiment_comparison(product, company, title, desc, data, height=200):
+    """
+    Plots a small line chart comparing the overall sentiment trends for a single product
+    between the selected company and British Gas over time.
+
+    Args:
+        product (str): The product category to filter the data.
+        company (str): The selected company. If "British Gas", only one line is plotted.
+        title (str): Title of the chart.
+        desc (str): Chart description (currently not used).
+        data (DataFrame): The full dataset containing sentiment scores.
+        height (int): Fixed height for the chart (in pixels). Default is 200.
+    """
+    sentiment_col = "Sentiment Score"
+
+    # Filter data for the specific product and company
+    company_data = data[
+        (data["Company"].str.contains(company)) &
+        (data["Final Product Category"].str.contains(product))
+    ]
+    if company != "British Gas":
+        bg_data = data[
+            (data["Company"].str.contains("British Gas")) &
+            (data["Final Product Category"].str.contains(product))
+        ]
+    else:
+        bg_data = None
+
+    # Return if no data for the selected company
+    if company_data.empty:
+        return
+
+    # Group by "Year-Month" for the sentiment score
+    company_grouped = company_data.groupby("Year-Month", as_index=False)[sentiment_col].mean()
+    company_grouped["Year-Month"] = pd.to_datetime(company_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+    company_grouped = company_grouped.sort_values("Year-Month")
+
+    if bg_data is not None and not bg_data.empty:
+        bg_grouped = bg_data.groupby("Year-Month", as_index=False)[sentiment_col].mean()
+        bg_grouped["Year-Month"] = pd.to_datetime(bg_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
+        bg_grouped = bg_grouped.sort_values("Year-Month")
+    else:
+        bg_grouped = None
+
+    # Create the Plotly figure
+    fig = go.Figure()
+
+    # Add trace for the selected company
+    fig.add_trace(
+        go.Scatter(
+            x=company_grouped["Year-Month"],
+            y=company_grouped[sentiment_col],
+            mode="lines+markers",
+            name=company,
+            line=dict(color="maroon", width=2),
+            hovertemplate=f"<b>{company} Sentiment:</b> %{{y:.2f}}<br>"
+        )
+    )
+
+    # Add trace for British Gas if applicable
+    if company != "British Gas" and bg_grouped is not None:
+        fig.add_trace(
+            go.Scatter(
+                x=bg_grouped["Year-Month"],
+                y=bg_grouped[sentiment_col],
+                mode="lines+markers",
+                name="British Gas",
+                line=dict(color="blue", width=2),
+                hovertemplate=f"<b>British Gas Sentiment:</b> %{{y:.2f}}<br>"
+            )
+        )
+
+    # Update layout
+    fig.update_layout(
+        title=title,
+        xaxis_title="Month & Year",
+        yaxis_title="Sentiment Score",
+        height=height,
+        legend=dict(
+            orientation="h",
+            yanchor="top",
+            y=-0.2,
+            xanchor="center",
+            x=0.5
+        )
+    )
+
+    # Set the y-axis range as before
+    #fig.update_yaxes(range=[-60, 95])
+
+    # Apply styling
+    fig = style_chart(fig)
+    fig = add_red_line(fig)
+
+    # Display the chart
+    st.plotly_chart(fig, use_container_width=True)
 
 def plot_chart_all_products(product, title, desc, data, metric, company, height=200):
     """
@@ -512,6 +625,9 @@ def plot_chart_all_products(product, title, desc, data, metric, company, height=
     if filtered_data.empty:
         return
 
+    # Filter out unknown product categorisations
+    filtered_data = filtered_data[filtered_data['Final Product Category'] != 'Unknown']
+
     # Ensure the "Year-Month" column is datetime (if not already).
     filtered_data["Year-Month"] = pd.to_datetime(filtered_data["Year-Month"], format='%d/%m/%Y', errors='raise')
 
@@ -534,9 +650,9 @@ def plot_chart_all_products(product, title, desc, data, metric, company, height=
                 x=product_data["Year-Month"],
                 y=product_data[sentiment_column],
                 mode="lines+markers",
-                name=product_cat,
+                name=product_emoji_map.get(product_cat),
                 line=dict(color=colour, width=2),
-                hovertemplate=f"<b>{product_cat} {metric}:</b> %{{y:.2f}}<br>"
+                hovertemplate=f"%{{y:.2f}}<br>" #<b>{product_cat} {metric}:</b>
             )
         )
 
@@ -555,9 +671,66 @@ def plot_chart_all_products(product, title, desc, data, metric, company, height=
         )
     )
 
+    # Set the y-axis range as before
+    fig.update_yaxes(range=[-60, 95])
+
     # Apply your standard styling functions.
     fig = style_chart(fig)
     fig = add_red_line(fig)
 
     # Display the chart.
     st.plotly_chart(fig, use_container_width=True)
+
+
+def plot_product_overall_sentiment(product, title, data, height=400):
+    """
+    Plots a line chart showing the overall sentiment trends for a product across all companies.
+
+    Args:
+        product (str): The product name.
+        title (str): Chart title.
+        data (DataFrame): Sentiment dataset.
+        height (int): Chart height.
+    """
+    import plotly.graph_objects as go
+    import pandas as pd
+    import streamlit as st
+
+    # Filter data for the product
+    product_data = data[data["Final Product Category"] == product]
+    if product_data.empty:
+        st.write("No data available for this product.")
+        return
+
+    # Get unique companies
+    companies = product_data["Company"].unique()
+
+    # Create figure
+    fig = go.Figure()
+
+    for company in companies:
+        company_data = product_data[product_data["Company"] == company]
+        grouped_data = company_data.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
+        grouped_data["Year-Month"] = pd.to_datetime(grouped_data["Year-Month"], format='%d/%m/%Y')
+        grouped_data = grouped_data.sort_values("Year-Month")
+
+        fig.add_trace(
+            go.Scatter(
+                x=grouped_data["Year-Month"],
+                y=grouped_data["Sentiment Score"],
+                mode="lines+markers",
+                name=company,
+                hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>"
+            )
+        )
+
+    fig.update_layout(
+        title=title,
+        xaxis_title="Month & Year",
+        yaxis_title="Sentiment Score",
+        height=height,
+        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
