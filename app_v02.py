@@ -85,7 +85,7 @@ with st.sidebar:
     with st.expander("🏫 Select Competitor", expanded=False):
         mode = st.radio(
             "Select Mode",
-            options=["🏢 Company Mode", "🎍 Market Mode"],
+            options=["🎍 Market Mode", "🏢 Company Mode"],
             index=0
         )
 
@@ -461,9 +461,30 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                     (market_summary_data["Product"] == product) &
                     (market_summary_data["Aspect"] == "Overall")
                 ]
-                if not filtered_analysis.empty:
-                    analysis_text = filtered_analysis.iloc[0]["Analysis"]
-                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+                print(product)
+                print(year_filter)
+                print(market_summary_data.head())
+                prod_strength = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Strength")
+                ]
+                prod_weakness = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Weakness")
+                ]
+                prod_improvement = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Improvement")
+                ]
+
+                if not prod_strength.empty:
+                    #analysis_text = filtered_analysis.iloc[0]["Analysis"]
+                    st.markdown(f"<div class='rounded-block'><h2>🏆 Our {product} Strengths</h2>{prod_strength.iloc[0]["Analysis"]}", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rounded-block'><h2>🏮 Our {product} Weaknesses</h2>{prod_weakness.iloc[0]["Analysis"]}", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rounded-block'><h2>🏗️ {product} Improvement Opportunities</h2>{prod_improvement.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                 else:
                     st.markdown("No market insights available for this product.")
 
@@ -499,7 +520,7 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                 # Display the analysis if available
                 if not filtered_analysis.empty:
                     analysis_text = filtered_analysis.iloc[0]["Analysis"]
-                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+                    st.markdown(f"<div class='rounded-block'>{analysis_text}", unsafe_allow_html=True)
                 else:
                     st.markdown("No market insights available for this aspect.")
 
