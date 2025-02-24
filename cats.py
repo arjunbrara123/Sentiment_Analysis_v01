@@ -40,7 +40,7 @@ product_emoji_map = {
     "Gas Products": "🚿 Gas Products",
     "Energy": "⚡ Energy",
     "Plumbing & Drains": "🪠 Plumbing & Drains",
-    "Appliance Repair": "📺 Appliance Repair",
+    "Appliance Cover": "📺 Appliance Cover",
     "Home Electrical": "🔦 Home Electrical",
     "Heating": "🔥 Heating",
     "Pest Control": "🐀 Pest Control",
