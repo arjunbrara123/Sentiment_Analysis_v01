@@ -97,23 +97,26 @@ with st.sidebar:
                 options=company_list,
                 index=0
             )
+            company_name = selected_company #.split(' ', 1)[-1]
             prod_option_list = prod_summary_data[prod_summary_data['Company'] == selected_company]['Product'].unique().tolist()
         else:
             selected_company = ""
 
     with st.expander(("🎁 Select Product" if mode == "🏢 Company Mode" else "🛖 Select Market"), expanded=False):
+        if 'All' not in prod_option_list:
+            prod_option_list.insert(0, "All")
         selected_product = st.radio(
             "Please Select a " + (" Product" if mode == "🏢 Company Mode" else " Market"),
-            options = prod_option_list,
+            options = [product_emoji_map.get(product, product) for product in prod_option_list], #prod_option_list,
             index=0
         )
 
     if mode == "🏢 Company Mode":
-        company_name = selected_company.split(' ', 1)[-1]
         input_Raw_Comments_Text_data = "Cleaned Reviews " + company_name + ".csv"
         reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
 
     product_name = selected_product.split(' ', 1)[-1]
+    #print(f"Product: {product_name}")
     if product_name == "All":
         analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends"]
     else:
@@ -126,12 +129,12 @@ with st.sidebar:
             index=0
         )
 
-    with st.expander("🕜 Time Period Settings", expanded=False):
+    with st.expander("⌚ Time Period Settings", expanded=False):
         filter_year = st.selectbox(
             "Pick a Year to Display",
             ("All", "2021", "2022", "2023", "2024", "2025"),
         index=4)
-        print(f"Year Select: {filter_year}")
+        #print(f"Year Select: {filter_year}")
 
     if filter_year != "All":
         sa_monthly_data = sa_monthly_data[sa_monthly_data['Year-Month'].str[-4:] == str(filter_year)]
@@ -347,39 +350,74 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
 
 elif mode == "🎍 Market Mode" and not dev_flag:
-    st.markdown(f"# Market Sentiment Analytics for {selected_product}")
 
-    # Dynamically generate tabs using the aspects_map dictionary - 6 aspects
-    aspects = list(aspects_map.keys())
-    tab_names = [aspects_map[aspect] for aspect in aspects]
-    tabs = st.tabs(tab_names)
+    if product_name == "All":
+        # Get unique products (excluding "All")
+        unique_products = [p for p in sa_monthly_data["Final Product Category"].unique() if p != "Unknown"]
+        tab_names = [product_emoji_map.get(product, product) for product in unique_products]
+        tabs = st.tabs(tab_names)
 
-    # Loop over the aspects and fill each tab with its respective chart and a placeholder
-    for idx, aspect in enumerate(aspects):
-        with tabs[idx]:
-            
-            # Call the new plotting function; the title can be dynamically built
-            plot_chart_3(
-                product=product_name,
-                aspect=aspect,
-                title=f"{aspects_map[aspect]} Market Sentiment Trends",
-                desc="",
-                data=sa_monthly_data
-            )
+        for idx, product in enumerate(unique_products):
+            with tabs[idx]:
+                st.markdown(f"## {product_emoji_map.get(product, product)}")
 
-            # Retrieve the corresponding analysis from the market summary
-            filtered_analysis = market_summary_data[
-                (market_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year))) &  # Only use data from that year
-                (market_summary_data["Product"] == product_name) &  # Match product
-                (market_summary_data["Aspect"] == aspect)  # Match aspect
-            ]
+                # Plot overall sentiment for this product
+                plot_product_overall_sentiment(
+                    product=product,
+                    title=f"{product} Market Sentiment Trends",
+                    data=sa_monthly_data
+                )
 
-            # Display the analysis if available
-            if not filtered_analysis.empty:
-                analysis_text = filtered_analysis.iloc[0]["Analysis"]
-                st.markdown(f"**Market Insights:**\n\n{analysis_text}")
-            else:
-                st.markdown("No market insights available for this aspect.")
+                # Display analysis text from CSV
+                year_filter = filter_year if filter_year == "All" else int(filter_year)
+                filtered_analysis = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Overall")
+                ]
+
+                if not filtered_analysis.empty:
+                    analysis_text = filtered_analysis.iloc[0]["Analysis"]
+                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+                else:
+                    st.markdown("No market insights available for this product.")
+
+    else:
+        
+        st.markdown(f"# Market Sentiment Analytics for {selected_product}")
+
+        # Dynamically generate tabs using the aspects_map dictionary - 6 aspects
+        aspects = list(aspects_map.keys())
+        tab_names = [aspects_map[aspect] for aspect in aspects]
+        tabs = st.tabs(tab_names)
+
+        # Loop over the aspects and fill each tab with its respective chart and a placeholder
+        for idx, aspect in enumerate(aspects):
+            with tabs[idx]:
+                #st.markdown(f"## {aspects_map[aspect]}")
+
+                # Call the new plotting function; the title can be dynamically built
+                plot_chart_3(
+                    product=product_name,
+                    aspect=aspect,
+                    title=f"{aspects_map[aspect]} Market Sentiment Trends",
+                    desc="",
+                    data=sa_monthly_data
+                )
+
+                # Retrieve the corresponding analysis from the market summary
+                filtered_analysis = market_summary_data[
+                    (market_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year))) &  # Only use data from that year
+                    (market_summary_data["Product"] == product_name) &  # Match product
+                    (market_summary_data["Aspect"] == aspect)  # Match aspect
+                ]
+
+                # Display the analysis if available
+                if not filtered_analysis.empty:
+                    analysis_text = filtered_analysis.iloc[0]["Analysis"]
+                    st.markdown(f"**Market Insights:**\n\n{analysis_text}")
+                else:
+                    st.markdown("No market insights available for this aspect.")
 
 elif dev_flag:
     data_proc_v01.run()
