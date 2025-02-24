@@ -43,6 +43,7 @@ product_emoji_map = {
     "Appliance Repair": "📺 Appliance Repair",
     "Home Electrical": "🔦 Home Electrical",
     "Heating": "🔥 Heating",
+    "Pest Control": "🐀 Pest Control",
     "Unknown": "🃏 Unknown"
 }
 product_categories = list(product_colours.keys())
@@ -64,10 +65,10 @@ insurer_colours = {
 }
 aspects_map = {
     "Appointment Scheduling": "⌚ Appointment Scheduling",
-    "Customer Service": "☎️ Customer Service",
-    "Response Speed": "🎽 Response Speed",
-    "Engineer Experience": "🧑‍🔧 Engineer Experience",
-    "Solution Quality": "🥇 Solution Quality",
+    "Customer Service": "🎽️ Customer Service",
+    "Response Speed": "🥇 Response Speed",
+    "Engineer Experience": "🎀 Engineer Experience",
+    "Solution Quality": "🧠 Solution Quality",
     "Value For Money": "💶 Value For Money",
 }
 aspects = list(aspects_map.keys())
