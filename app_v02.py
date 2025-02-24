@@ -97,7 +97,7 @@ with st.sidebar:
                 options=company_list,
                 index=0
             )
-            company_name = selected_company #.split(' ', 1)[-1]
+            company_name = selected_company.split(' ', 1)[-1]
             prod_option_list = prod_summary_data[prod_summary_data['Company'] == selected_company]['Product'].unique().tolist()
         else:
             selected_company = ""
