@@ -26,6 +26,16 @@ product_colours = {
     'Plumbing & Drains': 'magenta',
     'Unknown': 'grey'
 }
+company_emoji_map = {
+    "British Gas": "🌎 British Gas",
+    "HomeServe": "🧮 HomeServe",
+    "CheckATrade": "🧮 CheckATrade",
+    "Domestic & General": "🧮 Domestic & General",
+    "Corgi HomePlan": "🧮 Corgi HomePlan",
+    "247 Home Rescue": "🧮 247 Home Rescue",
+    "Octopus": "⚡ Octopus",
+    "OVO": "⚡ OVO",
+}
 product_emoji_map = {
     "Gas Products": "🚿 Gas Products",
     "Energy": "⚡ Energy",
