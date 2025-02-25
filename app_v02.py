@@ -69,7 +69,7 @@ def load_market_summary(input_filepath):
     return data
 
 # Input File #1 - This contains text summaries at a product / company level, both overall and for each aspect
-prod_summary_data = pd.read_csv("LLM Prod Level Summary v2.csv")
+prod_summary_data = pd.read_csv("LLM Prod Level Summary v2x.csv")
 company_list = prod_summary_data['Company'].unique().tolist()
 
 # Input File #2 - This contains the monthly sentiment / aspect score at a product / company level
@@ -317,14 +317,16 @@ if mode == "🏢 Company Mode" and not dev_flag:
                             aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
                             if not aspect_row.empty:
                                 analysis_text = aspect_row.iloc[0]["Analysis"]
-                                breakdown_text = aspect_row.iloc[0]["Breakdown"]
+                                #breakdown_text = aspect_row.iloc[0]["Breakdown"]
                                 #show_breakdown = st.toggle("Create More Detailed Analysis", key=f"breakdown_{aspect_col}")
+                                #st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>",
+                                #            unsafe_allow_html=True)
                                 st.markdown(analysis_text, unsafe_allow_html=True)
                                 #if show_breakdown:
-                                st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>",
-                                            unsafe_allow_html=True)
-                                st.markdown(f"### 🕵️ Suggested '{aspect_name}' Actionables to consider...", unsafe_allow_html=True)
-                                st.markdown(breakdown_text, unsafe_allow_html=True)
+                                #st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>",
+                                #            unsafe_allow_html=True)
+                                #st.markdown(f"### 🕵️ Suggested '{aspect_name}' Actionables to consider...", unsafe_allow_html=True)
+                                #st.markdown(breakdown_text, unsafe_allow_html=True)
                             else:
                                 st.write(f"No analysis available for {aspect_display}.")
 
