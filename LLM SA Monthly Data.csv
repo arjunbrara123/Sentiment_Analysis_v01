@@ -5,60 +5,63 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/12/2023,British Gas,Home Electrical,30,30,30,26.7,85,30,23.3,3
 01/12/2023,British Gas,Energy,-36,-41,-39.7,-38.6,-11.7,-38.6,-51.2,77
 01/01/2024,British Gas,Gas Products,68.4,54.4,68,50.6,71.5,66.3,34.4,345
-01/01/2024,British Gas,Plumbing & Drains,-1.7,-20,-11.7,8.3,10,3.3,-21.7,6
-01/01/2024,British Gas,Appliance Cover,83.8,37.5,83.8,60,92.5,85,72.5,4
-01/01/2024,British Gas,Home Electrical,90,60,87.5,67.5,92.5,92.5,57.5,4
+01/01/2024,British Gas,Plumbing & Drains,37.7,16.1,41.5,31.4,35.1,40.1,20,49
+01/01/2024,British Gas,Appliance Cover,46.3,23.1,50,39.2,52.9,44.6,38.5,26
+01/01/2024,British Gas,Home Electrical,62.6,14.3,65.2,55.2,70,66.1,50.4,23
 01/01/2024,British Gas,Energy,-20.7,-28.3,-23.9,-29.9,-15.1,-25.8,-37.9,181
 01/02/2024,British Gas,Gas Products,75.6,58.4,73,53.2,77.7,73.4,38.1,322
 01/02/2024,British Gas,Energy,-20.4,-27.9,-27.5,-30.1,-14.4,-23.1,-38.7,173
-01/02/2024,British Gas,Plumbing & Drains,48,52,52,52,58,52,42,5
-01/02/2024,British Gas,Appliance Cover,61.4,47.1,60,58.6,54.3,62.9,51.4,7
-01/02/2024,British Gas,Home Electrical,90,85,95,95,90,90,80,2
+01/02/2024,British Gas,Plumbing & Drains,37,24.8,37.4,38.3,43.7,35.6,23,27
+01/02/2024,British Gas,Appliance Cover,70.9,38.3,74.8,65.9,74.5,71,60,29
+01/02/2024,British Gas,Home Electrical,60.9,28.2,62.3,50,64.5,59.1,43.6,11
 01/03/2024,British Gas,Gas Products,73.4,50.5,72.5,44.5,76.9,72.4,37.9,290
 01/03/2024,British Gas,Energy,-20.4,-25.8,-25,-29.7,-18.3,-23.6,-37.9,175
-01/03/2024,British Gas,Plumbing & Drains,11.7,1.1,11.1,13.3,13.3,11.1,-3.3,9
-01/03/2024,British Gas,Appliance Cover,83,64,72,68,74,84,74,5
-01/03/2024,British Gas,Home Electrical,10,5,5,0,5,5,0,2
+01/03/2024,British Gas,Plumbing & Drains,41.3,25,42.8,38.5,39,37.9,19.5,39
+01/03/2024,British Gas,Appliance Cover,80.2,37.1,81.9,64.2,71.7,78.5,67.9,24
+01/03/2024,British Gas,Home Electrical,68.7,18.4,72.1,46.3,71.8,70.8,47.4,19
 01/04/2024,British Gas,Gas Products,76,57,76.7,50.9,80.1,74.8,39,281
 01/04/2024,British Gas,Energy,-15.7,-19.6,-17.9,-22.7,-9.6,-17.7,-33.3,162
-01/04/2024,British Gas,Plumbing & Drains,42,24,34,32,32,30,24,5
-01/04/2024,British Gas,Appliance Cover,46.7,40,63.3,63.3,73.3,46.7,13.3,3
-01/04/2024,British Gas,Home Electrical,42.5,45,45,25,22.5,42.5,17.5,4
+01/04/2024,British Gas,Plumbing & Drains,54.2,41.3,56.3,55.5,61.3,50.3,40,31
+01/04/2024,British Gas,Appliance Cover,53.2,29.5,55.9,42.7,51.8,52,37.7,22
+01/04/2024,British Gas,Home Electrical,54.7,17.1,57.1,48.2,53.8,51.2,37.6,17
 01/05/2024,British Gas,Gas Products,73.3,52.4,73,52.3,80.1,73.2,33.6,290
 01/05/2024,British Gas,Energy,-37,-40.1,-41.2,-42.8,-25.5,-39.8,-51.6,200
-01/05/2024,British Gas,Plumbing & Drains,52.1,28.6,47.1,47.1,45.7,40,37.1,7
-01/05/2024,British Gas,Appliance Cover,86.7,53.3,76.7,56.7,86.7,90,46.7,3
-01/05/2024,British Gas,Home Electrical,3.8,5,7.5,7.5,7.5,0,-27.5,4
+01/05/2024,British Gas,Plumbing & Drains,38.2,19.1,40.2,30.6,40,37.3,21.2,33
+01/05/2024,British Gas,Appliance Cover,68.1,22.9,67.1,53.8,62.5,69.2,44,24
+01/05/2024,British Gas,Home Electrical,63.6,46.4,65.4,59.3,65.7,62.9,45.7,14
 01/06/2024,British Gas,Gas Products,74.5,58.5,74.8,55.3,78.6,71.9,36.8,289
 01/06/2024,British Gas,Energy,-6.5,-17.8,-17.5,-21,-9.2,-12.6,-22.2,203
-01/06/2024,British Gas,Plumbing & Drains,56.9,16.3,57.5,26.3,52.5,56.3,22.5,8
-01/06/2024,British Gas,Appliance Cover,65.6,42.5,57.5,53.8,60,68.8,42.5,8
-01/06/2024,British Gas,Home Electrical,31.7,30,31.7,16.7,33.3,26.7,18.3,6
+01/06/2024,British Gas,Plumbing & Drains,51.3,31,52.3,47,52,50.3,36.7,30
+01/06/2024,British Gas,Appliance Cover,70,40.3,68.7,55,71.3,71,57.7,30
+01/06/2024,British Gas,Home Electrical,58,35.3,62.3,48.7,60.7,56.3,46.7,15
 01/07/2024,British Gas,Gas Products,72.2,58.1,72,49.9,77.9,68.6,30.4,238
 01/07/2024,British Gas,Energy,-4.3,-16.6,-16.1,-25.8,-5.9,-9.2,-18.5,183
-01/07/2024,British Gas,Plumbing & Drains,-48.8,-47.5,-50,-40,-25,-52.5,-52.5,4
-01/07/2024,British Gas,Appliance Cover,21,2,18,18,22,20,0,5
-01/07/2024,British Gas,Home Electrical,-5,-32.5,-30,-32.5,0,-2.5,-7.5,4
+01/07/2024,British Gas,Plumbing & Drains,32.8,23.3,38.9,40.6,32.8,36.1,26.1,18
+01/07/2024,British Gas,Appliance Cover,41.5,17.8,44.1,38.1,43.3,42.6,24.1,27
+01/07/2024,British Gas,Home Electrical,51.7,-0.8,49.4,21.5,46.3,50.4,38.1,26
 01/08/2024,British Gas,Gas Products,75.2,59.4,75.5,52,81,72.8,39.2,377
 01/08/2024,British Gas,Energy,4.5,-10,-6.2,-14.1,-5.3,-0.6,-11.2,165
-01/08/2024,British Gas,Plumbing & Drains,-22.5,-46.7,-28.3,-30,-25,-28.3,-36.7,6
-01/08/2024,British Gas,Appliance Cover,88.3,50,86.7,26.7,90,86.7,56.7,3
-01/08/2024,British Gas,Home Electrical,67.5,55,75,10,80,55,15,2
+01/08/2024,British Gas,Plumbing & Drains,4.4,-10.8,2.1,5.8,15.8,3.5,-7.5,24
+01/08/2024,British Gas,Appliance Cover,63.7,17.4,62.2,46.7,74.8,63.7,47.4,27
+01/08/2024,British Gas,Home Electrical,61.3,10.5,63.3,40.5,64,60.5,33.5,20
 01/09/2024,British Gas,Gas Products,76,59.3,76.8,51.3,79.7,74.3,39.5,437
 01/09/2024,British Gas,Energy,-8,-17,-18.4,-19.8,-10.8,-11.1,-22.6,166
-01/09/2024,British Gas,Plumbing & Drains,66.7,55,63.3,21.7,65,63.3,26.7,6
-01/09/2024,British Gas,Appliance Cover,86,70,92,88,88,86,48,5
-01/09/2024,British Gas,Home Electrical,70,44.5,63.6,56.4,79.1,73.6,61.8,11
+01/09/2024,British Gas,Plumbing & Drains,39.3,15.5,40.3,30,49,39.3,25.9,29
+01/09/2024,British Gas,Appliance Cover,55.8,33.7,54,46.3,52.3,52,42.7,30
+01/09/2024,British Gas,Home Electrical,66.2,30.5,66.8,55.2,69.5,66.2,50.5,42
 01/10/2024,British Gas,Gas Products,65.8,48.4,65.5,44.5,72.5,65.1,30.5,570
 01/10/2024,British Gas,Energy,-11.8,-19.7,-16.9,-21.2,-11.2,-15.7,-25.4,226
-01/10/2024,British Gas,Plumbing & Drains,6.7,-13.3,0,3.3,15.6,7.8,0,9
-01/10/2024,British Gas,Appliance Cover,33.3,15,33.3,18.3,48.3,35,15,6
-01/10/2024,British Gas,Home Electrical,54.1,49.4,54.7,41.3,58.8,52.5,25,16
+01/10/2024,British Gas,Plumbing & Drains,42.9,23.5,44.5,39.8,51.2,46.1,29.1,46
+01/10/2024,British Gas,Appliance Cover,46.2,14.4,47.4,41.6,45.8,46,33.7,43
+01/10/2024,British Gas,Home Electrical,62.4,34.6,64.5,49.5,64.9,61.9,44.4,39
 01/11/2024,British Gas,Gas Products,71.8,55.6,71.2,53.1,79.2,70.1,33.3,296
 01/11/2024,British Gas,Energy,-9.1,-20.2,-17,-24.9,-9.8,-13.7,-22.1,130
-01/11/2024,British Gas,Plumbing & Drains,25,-5,30,-5,17.5,10,2.5,4
-01/11/2024,British Gas,Appliance Cover,18,16,16,14,16,16,-4,5
-01/11/2024,British Gas,Home Electrical,34.4,3.8,25,26.3,26.3,23.8,17.5,8
+01/11/2024,British Gas,Plumbing & Drains,36.3,15.6,39.5,33.9,40.8,35.9,25.9,80
+01/11/2024,British Gas,Appliance Cover,37.8,5,38.8,25.8,38.5,35.9,28.4,55
+01/11/2024,British Gas,Home Electrical,72.7,34.4,74.4,62,74.5,72.3,59.9,71
+01/12/2024,British Gas,Plumbing & Drains,30.1,8,32.8,27.6,36.1,30.9,20.5,97
+01/12/2024,British Gas,Appliance Cover,37.7,26.3,39.1,34.9,43.8,38.8,30.2,51
+01/12/2024,British Gas,Home Electrical,73.3,39.2,74.8,65.1,71.6,74.2,55.3,49
 01/06/2022,HomeServe,Gas Products,46,30,33,38,50,47,-12,
 01/06/2022,HomeServe,Plumbing & Drains,65,32,52,57,67,65,-6,
 01/06/2022,HomeServe,Home Electrical,19,3,10,21,20,20,-28,
@@ -306,27 +309,16 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/01/2025,CheckATrade,Plumbing & Drains,41,9,37,28,40,40,35,32
 01/01/2025,CheckATrade,Home Electrical,94,86,94,91,94,93,84,7
 01/01/2024,Domestic & General,Appliance Cover,28,13.2,29.8,25.9,27.7,28.3,20.1,136
-01/01/2024,Domestic & General,Home Electrical,92.5,0,95,85,50,90,80,2
 01/02/2024,Domestic & General,Appliance Cover,22.1,1.9,23.4,16.9,20.7,22,10.9,152
-01/02/2024,Domestic & General,Home Electrical,52.5,15,25,20,55,70,15,2
 01/03/2024,Domestic & General,Appliance Cover,29.8,11.9,29.6,29.4,29.7,29.9,21.9,83
-01/03/2024,Domestic & General,Home Electrical,90,93.3,90,86.7,90,90,76.7,3
 01/04/2024,Domestic & General,Appliance Cover,39.9,15.6,40.3,32.2,37.1,39.4,27.3,140
-01/04/2024,Domestic & General,Home Electrical,10,20,8,18,14,14,-8,5
 01/05/2024,Domestic & General,Appliance Cover,44,29.1,43.4,38.1,41.8,40.7,30.4,121
-01/05/2024,Domestic & General,Home Electrical,13.3,-26.7,16.7,23.3,16.7,13.3,-26.7,3
 01/06/2024,Domestic & General,Appliance Cover,46.5,23.6,46.2,39.7,45.1,47.7,31.9,109
-01/06/2024,Domestic & General,Home Electrical,90,80,90,90,100,90,70,1
 01/07/2024,Domestic & General,Appliance Cover,51.1,28.3,51.1,44.8,48,50.4,36.2,144
-01/07/2024,Domestic & General,Home Electrical,7.5,-10,10,2.5,7.5,-2.5,0,4
 01/08/2024,Domestic & General,Appliance Cover,54.7,34.3,55.8,47.8,48.5,54.9,38.5,136
-01/08/2024,Domestic & General,Home Electrical,42.5,40,42.5,40,42.5,37.5,2.5,4
 01/09/2024,Domestic & General,Appliance Cover,50.4,33.5,51.3,44.7,47.2,50.6,35.4,131
-01/09/2024,Domestic & General,Home Electrical,85,90,87.5,85,85,85,75,2
 01/10/2024,Domestic & General,Appliance Cover,45.8,26.6,47.5,40.5,45.8,45.7,35.8,153
-01/10/2024,Domestic & General,Home Electrical,51,0,50,52,34,50,48,5
 01/11/2024,Domestic & General,Appliance Cover,25.7,8,25.6,21,20.8,24.9,13.6,78
-01/11/2024,Domestic & General,Home Electrical,,,,,,,,0
 01/01/2024,Corgi HomePlan,Gas Products,70.4,53.9,74.3,69.9,73.7,71,38.6,253
 01/01/2024,Corgi HomePlan,Plumbing & Drains,70.8,52.2,73.4,64.6,70.8,69.7,50,37
 01/01/2024,Corgi HomePlan,Appliance Cover,51,22,56,56,56,66,42,5
@@ -373,40 +365,28 @@ Year-Month,Company,Final Product Category,Sentiment Score,Appointment Scheduling
 01/11/2024,Corgi HomePlan,Home Electrical,76,72,90,84,74,82,38,5
 01/01/2024,247 Home Rescue,Gas Products,51.1,14.7,52,38.7,53.8,50.1,24.2,284
 01/01/2024,247 Home Rescue,Plumbing & Drains,-8.1,-18.3,-3.9,-6.4,-3.3,-7.8,-18.3,18
-01/01/2024,247 Home Rescue,Home Electrical,20,6.7,25,16.7,25,21.7,11.7,3
 01/02/2024,247 Home Rescue,Gas Products,61.5,23.8,62.6,46.6,64.7,61,29.5,323
 01/02/2024,247 Home Rescue,Plumbing & Drains,20.6,10,23.8,11.3,22.5,20,2.5,8
-01/02/2024,247 Home Rescue,Home Electrical,-90,-90,-90,-85,-90,-85,-85,2
 01/03/2024,247 Home Rescue,Gas Products,64.5,28,65.5,52.9,67.7,63.3,35.5,300
 01/03/2024,247 Home Rescue,Plumbing & Drains,9.3,-19.3,11.1,10,15.7,6.4,-5,14
-01/03/2024,247 Home Rescue,Home Electrical,-13.3,-3.3,-16.7,-13.3,30,-20,-46.7,3
 01/04/2024,247 Home Rescue,Gas Products,65.5,24.3,66.4,49.7,69.9,65.5,31.2,270
 01/04/2024,247 Home Rescue,Plumbing & Drains,0.8,-17.7,-2.3,-0.8,4.6,3.8,-13.1,13
-01/04/2024,247 Home Rescue,Home Electrical,-80,-80,-80,-70,-80,-80,-80,1
 01/05/2024,247 Home Rescue,Gas Products,56.8,12.8,57.3,38.9,60.6,55.7,22.7,233
 01/05/2024,247 Home Rescue,Plumbing & Drains,52,35,53.5,53,52,50,25,10
-01/05/2024,247 Home Rescue,Home Electrical,-85,-90,-86.7,-83.3,-86.7,-85,-80,3
 01/06/2024,247 Home Rescue,Gas Products,68.4,26.7,68.7,50.8,71.1,66.9,31.9,188
 01/06/2024,247 Home Rescue,Plumbing & Drains,45,22.5,45,42.5,47.5,42.5,12.5,4
-01/06/2024,247 Home Rescue,Home Electrical,-14.3,-14.3,-14.3,-12.9,-14.3,-14.3,-25.7,7
 01/07/2024,247 Home Rescue,Gas Products,69,28.8,69.8,50.1,71.8,69.1,47.4,272
 01/07/2024,247 Home Rescue,Plumbing & Drains,-14.2,-40.8,-14.2,-17.5,-12.5,-13.3,-19.2,12
-01/07/2024,247 Home Rescue,Home Electrical,-87.5,-90,-87.5,-85,-90,-85,-85,2
 01/08/2024,247 Home Rescue,Gas Products,70.4,29.7,72.1,51.4,71.4,69.7,45.9,299
 01/08/2024,247 Home Rescue,Plumbing & Drains,5.9,-22.9,5.9,-1.8,10,10.6,-2.9,17
-01/08/2024,247 Home Rescue,Home Electrical,,,,,,,,0
 01/09/2024,247 Home Rescue,Gas Products,58.7,23.9,59.7,42.2,61.1,58.4,40.1,309
 01/09/2024,247 Home Rescue,Plumbing & Drains,-1.3,-41.7,-0.8,0.8,-3.3,1.7,-10,12
-01/09/2024,247 Home Rescue,Home Electrical,-84,-82,-84,-80,-82,-82,-80,5
 01/10/2024,247 Home Rescue,Gas Products,52.5,15.7,53.1,38,56,52.3,33.5,374
 01/10/2024,247 Home Rescue,Plumbing & Drains,-10,-38.8,-9.1,-15,-15,-10.6,-17.5,16
-01/10/2024,247 Home Rescue,Home Electrical,20,0,20,50,20,20,-20,1
 01/11/2024,247 Home Rescue,Gas Products,55.8,17.5,57.2,41.6,57.7,55,36.6,347
 01/11/2024,247 Home Rescue,Plumbing & Drains,-15.7,-32.1,-11.8,-12.1,-1.4,-19.3,-25.7,14
-01/11/2024,247 Home Rescue,Home Electrical,-87.5,-85,-90,-85,-90,-85,-85,2
 01/12/2024,247 Home Rescue,Gas Products,56.5,18.9,57.6,39.6,59.5,56.1,38.5,319
 01/12/2024,247 Home Rescue,Plumbing & Drains,20,9.2,25,25.8,38.3,33.3,5,12
-01/12/2024,247 Home Rescue,Home Electrical,90,80,90,90,90,90,75,2
 01/01/2024,Domestic & General,Gas Products,34.2,18.3,34.9,29.2,38.5,34.7,21.1,150
 01/02/2024,Domestic & General,Gas Products,20.2,3.7,22.1,12.4,24.6,20.1,11.3,79
 01/03/2024,Domestic & General,Gas Products,29.6,13.3,30.7,22.6,35.7,26.8,15.8,57
