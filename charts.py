@@ -735,6 +735,7 @@ def plot_product_overall_sentiment(product, title, data, height=400):
         height=height,
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
     )
+    fig = style_chart(fig)  # Apply styling
     fig = add_red_line(fig)
 
     # Set the y-axis range as before
