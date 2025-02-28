@@ -60,9 +60,10 @@ energy_colours = {
 insurer_colours = {
     'British Gas': 'blue',
     'HomeServe': 'red',
-    'Domestic and General': 'green',
+    'Domestic & General': 'darkcyan',
     'Corgi HomePlan': 'orange',
-    '247 Home Rescue': 'brown'
+    '247 Home Rescue': 'brown',
+    'CheckATrade': 'grey'
 }
 aspects_map = {
     "Appointment Scheduling": "⌚ Appointment Scheduling",
@@ -73,3 +74,11 @@ aspects_map = {
     "Value For Money": "💶 Value For Money",
 }
 aspects = list(aspects_map.keys())
+aspect_colours = {
+    "Appointment Scheduling": "green",
+    "Customer Service": "red",
+    "Response Speed": "blue",
+    "Engineer Experience": "orange",
+    "Solution Quality": "purple",
+    "Value For Money": "teal"
+}
