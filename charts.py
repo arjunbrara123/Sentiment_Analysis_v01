@@ -269,19 +269,19 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
                     line=dict(width=2)  # Keep the lines clean and simple
                 )
             )
-            # Add a separate trace for the emoji, placed near the last data point.  This is the KEY change.
-            fig.add_trace(
-                go.Scatter(
-                    x=[last_date],
-                    y=[last_point],
-                    mode="markers+text",
-                    text=[aspects_map[aspect]],  # Use emoji directly
-                    textposition="middle right",
-                    marker=dict(size=15, color='rgba(0,0,0,0)'),  # Invisible marker
-                    showlegend=False,  # Don't show this in the legend
-                    hoverinfo='skip' # Remove hover
-                )
-            )
+            # # Add a separate trace for the emoji, placed near the last data point.  This is the KEY change.
+            # fig.add_trace(
+            #     go.Scatter(
+            #         x=[last_date],
+            #         y=[last_point],
+            #         mode="markers+text",
+            #         text=[aspects_map[aspect]],  # Use emoji directly
+            #         textposition="middle right",
+            #         marker=dict(size=15, color='rgba(0,0,0,0)'),  # Invisible marker
+            #         showlegend=False,  # Don't show this in the legend
+            #         hoverinfo='skip' # Remove hover
+            #     )
+            # )
     elif view == "sentiment":
         fig.add_trace(
             go.Scatter(
@@ -714,13 +714,17 @@ def plot_product_overall_sentiment(product, title, data, height=400):
         grouped_data["Year-Month"] = pd.to_datetime(grouped_data["Year-Month"], format='%d/%m/%Y')
         grouped_data = grouped_data.sort_values("Year-Month")
 
+        # If the company is not found, default to 'gray'.
+        color = insurer_colours.get(company, "gray")
+
         fig.add_trace(
             go.Scatter(
                 x=grouped_data["Year-Month"],
                 y=grouped_data["Sentiment Score"],
                 mode="lines+markers",
                 name=company,
-                hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>"
+                hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>",
+                line=dict(color=color)  # Using the predefined company color here
             )
         )
 
@@ -731,6 +735,10 @@ def plot_product_overall_sentiment(product, title, data, height=400):
         height=height,
         legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
     )
+    fig = add_red_line(fig)
+
+    # Set the y-axis range as before
+    fig.update_yaxes(range=[-40, 95])
 
     st.plotly_chart(fig, use_container_width=True)
 
