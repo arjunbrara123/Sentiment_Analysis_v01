@@ -103,7 +103,7 @@ with st.sidebar:
             selected_company = ""
 
     with st.expander(("🎁 Select Product" if mode == "🏢 Company Mode" else "🛖 Select Market"), expanded=True):
-        if 'All' not in prod_option_list and mode == "🛖 Select Market":
+        if 'All' not in prod_option_list and mode != "🏢 Company Mode":
             prod_option_list.insert(0, "All")
         selected_product = st.radio(
             "Please Select a " + (" Product" if mode == "🏢 Company Mode" else " Market"),
