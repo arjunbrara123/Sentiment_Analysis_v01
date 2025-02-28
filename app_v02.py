@@ -257,7 +257,8 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
                         if not aspect_row.empty:
                             analysis_text = aspect_row.iloc[0]["Analysis"]
-                            st.markdown(analysis_text, unsafe_allow_html=True)
+                            #st.markdown(analysis_text, unsafe_allow_html=True)
+                            st.markdown(f"<div class='rounded-block'>{analysis_text}</div>", unsafe_allow_html=True)
                         else:
                             st.write("No analysis available for this aspect.")
 
