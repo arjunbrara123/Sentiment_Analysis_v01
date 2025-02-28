@@ -234,7 +234,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
             # iterate over the aspect tabs using index starting from 1.
             for idx, aspect in enumerate(aspects_map, start=1):
                 with company_tabs[idx]:
-                    st.markdown(f"## {aspects_map[aspect]}")
+                    # st.markdown(f"## {aspects_map[aspect]}")
                     # Create a two-column layout
                     col1, col2 = st.columns(2)
                     with col1:
@@ -244,6 +244,9 @@ if mode == "🏢 Company Mode" and not dev_flag:
                                                f"{aspects_map[aspect]} Comparison", "",
                                                sa_monthly_data)
                     with col2:
+
+                        st.markdown(f"## {aspects_map[aspect]} Analysis")
+
                         # Retrieve and display the analysis text for this aspect.
                         selected_rows = prod_summary_data[
                             (prod_summary_data["Company"] == company_name) &
@@ -251,11 +254,29 @@ if mode == "🏢 Company Mode" and not dev_flag:
                             ]
                         aspect_name = aspects_map[aspect].split(' ', 1)[-1]  # adjust if needed
                         aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
+
                         if not aspect_row.empty:
                             analysis_text = aspect_row.iloc[0]["Analysis"]
                             st.markdown(analysis_text, unsafe_allow_html=True)
                         else:
                             st.write("No analysis available for this aspect.")
+
+                        aspect_score = int(filtered_data_left[aspect_name + "_sentiment_score"].mean())
+                        if company_name == "British Gas":
+                            aspect_difference = ""
+                        else:
+                            #aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
+                            aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
+                            if not aspect_row.empty:
+                                sentiment_difference = aspect_row.iloc[0]["Sentiment Difference"]
+                                aspect_difference = -sentiment_difference if not pd.isna(sentiment_difference) else ""
+                            else:
+                                aspect_difference = ""
+                        col1, col2 = st.columns([4,5])
+                        with col1:
+                            st.write("")
+                        with col2:
+                            st.metric(company_name, aspect_score, aspect_difference)
 
         # # Add divider
         # st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
