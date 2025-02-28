@@ -73,10 +73,10 @@ prod_summary_data = pd.read_csv("LLM Prod Level Summary v2x.csv")
 company_list = prod_summary_data['Company'].unique().tolist()
 
 # Input File #2 - This contains the monthly sentiment / aspect score at a product / company level
-sa_monthly_data = pd.read_csv("LLM SA Monthly Data v2.csv")
+sa_monthly_data = pd.read_csv("LLM SA Monthly Data.csv")
 
 # Input File #3 - Load Market Summary Data
-market_summary_data = load_market_summary("LLM Market Summary.csv")
+market_summary_data = load_market_summary("LLM Market Summary v2.csv")
 
 # Create a container with a white background for the sidebar controls
 with st.sidebar:
