@@ -82,7 +82,7 @@ market_summary_data = load_market_summary("LLM Market Summary v2.csv")
 with st.sidebar:
     st.sidebar.image("company_logo.png")
 
-    with st.expander("🏫 Select Competitor", expanded=True):
+    with st.expander("🏫 Select Competitor", expanded=False):
         mode = st.radio(
             "Select Mode",
             options=["🎍 Market Mode", "🏢 Company Mode"],
@@ -102,7 +102,7 @@ with st.sidebar:
         else:
             selected_company = ""
 
-    with st.expander(("🎁 Select Product" if mode == "🏢 Company Mode" else "🛖 Select Market"), expanded=True):
+    with st.expander(("🎁 Select Product" if mode == "🏢 Company Mode" else "🛖 Select Market"), expanded=False):
         if 'All' not in prod_option_list:
             prod_option_list.insert(0, "All")
         selected_product = st.radio(
@@ -122,14 +122,14 @@ with st.sidebar:
     else:
         analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends", "🙋‍♀️ Ask Alice..."]
 
-    with st.expander("🧩 Analysis Mode", expanded=True):
+    with st.expander("🧩 Analysis Mode", expanded=False):
         analysis_mode = st.radio(
             "Please Select Analysis",
             options=analysis_mode_options,
             index=0
         )
 
-    with st.expander("⌚ Time Period Settings", expanded=True):
+    with st.expander("⌚ Time Period Settings", expanded=False):
         filter_year = st.selectbox(
             "Pick a Year to Display",
             ("All", "2021", "2022", "2023", "2024", "2025"),
