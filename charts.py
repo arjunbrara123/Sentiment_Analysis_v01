@@ -1,745 +1,345 @@
+"""
+Charts Module
+=============
+
+This module provides charting functions used in the Competitor Analytics Dashboard.
+Below is a list of the available chart functions along with their purpose, outputs,
+and where they are used in the dashboard:
+
+1. plot_chart_all_products(product, title, desc, data, metric, company, height=200)
+   - Dashboard Usage: Called in Company Mode Overview (left/right columns) when the selected product is "All".
+   - Purpose: Plots one trace per product category for a specified company.
+   - Output: Renders a Plotly line chart (via Streamlit) showing overall sentiment or a chosen aspect metric.
+
+2. plot_chart_2(product, title, desc, data, view="aspect")
+   - Dashboard Usage: Called in Company Mode Overview when a specific (non "All") product is selected.
+   - Purpose: Plots sentiment trends over time for a specific product.
+     Can toggle between an overall sentiment view and an aspect breakdown view.
+   - Output: Renders a Plotly line chart (via Streamlit).
+
+3. plot_aspect_comparison(product, aspect, company, title, desc, data, height=500)
+   - Dashboard Usage: Called in Company Mode’s aspect tabs to compare the selected company versus British Gas.
+   - Purpose: Compares the sentiment trend for a single aspect between the selected company and British Gas.
+   - Output: Renders a small Plotly line chart (via Streamlit) comparing the two companies.
+
+4. plot_chart_3(product, aspect, title, desc, data)
+   - Dashboard Usage: Called in Market Mode (when a specific product is selected) for each aspect’s market trends.
+   - Purpose: Plots market sentiment trends for a given aspect, with one line per competitor.
+   - Output: Renders a Plotly line chart (via Streamlit) showing competitor sentiment trends.
+
+5. plot_product_overall_sentiment(product, title, data, height=400)
+   - Dashboard Usage: Called in Market Mode when “All” products are selected to display overall sentiment trends.
+   - Purpose: Plots overall sentiment trends for a product across all companies.
+   - Output: Renders a Plotly line chart (via Streamlit) showing each company’s overall sentiment.
+
+Note:
+- This module assumes that the external constants (e.g. product_emoji_map, product_colours, insurer_colours,
+  aspects_map, aspects, aspect_colours, etc.) are defined in the module "cats".
+"""
+
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
-from scipy.signal import savgol_filter
+
+# Import external configurations and colour mappings from cats
 from cats import *
-from statsmodels.tsa.holtwinters import ExponentialSmoothing
 
-# === Helper Functions ===
-# Smoothing function for charts
-def smooth_data(series, window=3, method='rolling_mean', polyorder=2):
+# --- Helper Functions ---
 
-    if window == 1:
-        return series # No smoothing applied
-
-    if method == 'rolling_mean':
-        return series.rolling(window=window, min_periods=1).mean() # Apply rolling mean smoothing
-
-    elif method == 'savgol':
-        # Check window is odd and greater than polyorder
-        if window < 3:
-            raise ValueError("Window size must be at least 3 for Savitzky–Golay filter.")
-        if window % 2 == 0:
-            window += 1  # Make window size odd
-
-        if polyorder >= window:
-            raise ValueError("Polynomial order must be less than window size.")
-
-        # Apply Savitzky–Golay filter
-        smoothed = savgol_filter(series, window_length=window, polyorder=polyorder)
-        return pd.Series(smoothed, index=series.index)
-
-    else:
-        raise ValueError("Unsupported smoothing method. Choose 'rolling_mean' or 'savgol'.")
-
-
-def filter_chart_data(data, title, filters, unique_key):
-
-    # Create a container so all related widgets and summary appear together
-    container = st.expander("🕵️ " + title + " - Expand for Data Filters ↓", expanded=False)
-    with container:
-
-        # Dynamically create product checkbox columns
-        selected_products = product_categories
-        if 'product' in filters:
-            selected_products = []
-            cols = st.columns(len(product_categories))
-            for product, col in zip(product_categories, cols):
-                if col.checkbox(product, value=True, key=f"{unique_key}_checkbox_{product}"):
-                    selected_products.append(product)
-            filtered_data = data[data['Final Product Category'].isin(selected_products)]
-        else:
-            filtered_data = data
-
-        # Add the emotion dropdown
-        selected_emotion = 'All'
-        if 'emotion' in filters:
-            emotion_options = ['All'] + emotion_categories
-            selected_emotion = st.selectbox(
-                "Select Emotion Filter:", emotion_options,
-                index=0,  # Default to 'All'
-                key=f"{unique_key}_emotion_select"
-            )
-
-        # Add a unique key to the slider to avoid conflicts
-        if 'time' in filters:
-            start_date, end_date = st.slider(
-                "Select Time Period for Analysis:",
-                min_value=data['Year-Month'].min().date(),
-                max_value=data['Year-Month'].max().date(),
-                value=(data['Year-Month'].min().date(), data['Year-Month'].max().date()),
-                help="Adjust the time range to filter the sentiment data.",
-                key=f"{unique_key}_date_slider"
-            )
-            filtered_period_data = filtered_data[
-                (filtered_data['Year-Month'] >= pd.Timestamp(start_date)) &
-                (filtered_data['Year-Month'] <= pd.Timestamp(end_date))
-            ]
-        else:
-            filtered_period_data = filtered_data
-
-        if selected_emotion != 'All':
-            filtered_period_data = filtered_period_data[filtered_period_data['Strongest Emotion'] == selected_emotion]
-
-        # Summarize filtered data
-        product_counts = filtered_period_data['Final Product Category'].value_counts()
-        total_count = len(filtered_period_data)
-        emotion_averages = {emotion: filtered_period_data[emotion].mean() for emotion in emotion_categories}
-        average_rating = filtered_period_data['Rating'].mean()
-
-        # Format summaries
-        product_count_text = ", ".join(
-            f"{product}: {count} ({count / total_count * 100:.2f}%)"
-            for product, count in product_counts.items()
-        )
-
-        emotion_average_text = ", ".join(
-            f"{emotion.capitalize()}: {avg:.2f}" for emotion, avg in emotion_averages.items()
-        )
-
-        summary_markdown = f"""
-        **Entries in Filtered Data:**
-        - {product_count_text}
-        - **Total Entries:** {total_count}
-
-        **Average Metrics Across Filtered Data:**
-        - **Average Rating:** {average_rating:.2f}
-        - **Average Emotion Scores:** {emotion_average_text}
-        """
-
-        st.markdown(summary_markdown)
-
-    return filtered_period_data, selected_products  # Return the filtered dataset for charting
-
-def style_chart(fig):
+def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="Sentiment Score", height=600, legendpos="h"):
+    """
+    Applies consistent styling to the Plotly figure.
+    Uses Arial fonts, blue border (#0490d7) with dash-dot, and adds a red dashed reference line at y=0.
+    """
     fig.update_layout(
+        title=title,
         title_font=dict(family="Arial Black", size=24, color="#012973"),
         font=dict(family="Arial", size=14, color="#012973"),
-        title_y=0.93, title_x=0.0,
-        paper_bgcolor="white", plot_bgcolor="white",
-        legend_title = " Legend",
-        template="plotly_white", height=600, hovermode="closest",
-        legend=dict(bgcolor="white", bordercolor="#0490d7", borderwidth=1),
-        xaxis=dict(title_font=dict(family="Arial, sans-serif", size=16, color="#012973")),
-        yaxis=dict(title_font=dict(family="Arial, sans-serif", size=16, color="#012973")),
+        title_y=0.96,
+        title_x=0.0,
+        paper_bgcolor="white",
+        plot_bgcolor="white",
+        legend_title="" ,# Legend",
+        template="plotly_white",
+        height=height,
+        hovermode="closest",
+        legend=dict(bgcolor="white", bordercolor="#0490d7", borderwidth=0, orientation="h"),
+        xaxis=dict(
+            title="", #xaxis_title,
+            title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
+        ),
+        yaxis=dict(
+            title=yaxis_title,
+            title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
+        ),
+        margin=dict(l=50, r=50, t=50, b=50)
     )
-
-    # Add a border around the entire chart
+    # Add a blue dashed-dot border around the entire chart
     fig.update_layout(
         shapes=[
-            dict(type="rect", xref="paper", yref="paper",
-                    x0=0, y0=0, x1=1, y1=1,
-                    line=dict(color="#0490d7", width=1, dash="dot"),
-                    fillcolor="rgba(0,0,0,0)"
+            dict(
+                type="rect", xref="paper", yref="paper",
+                x0=0, y0=0, x1=1, y1=1,
+                line=dict(color="#0490d7", width=1, dash="dot"),
+                fillcolor="rgba(0,0,0,0)"
             )
         ]
     )
-
-    return fig
-
-def add_red_line(fig):
+    # Add red dashed reference line at y=0
     fig.add_shape(
+        type="line", xref="paper", yref="y",
         x0=0, y0=0, x1=1, y1=0,
-        type="line", yref="y", xref="paper",
         line=dict(color="red", width=2, dash="dot")
     )
     return fig
 
-def plot_chart_1(group_var, title, desc, data):
+def create_line_trace(df, x_col, y_col, label, color=None, dash=None, hovertemplate=None, marker_symbol="circle", showlegend=True):
     """
-    Renders a chart based on the specified parameters.
-
-    Args:
-        chart_column (str): Column name for chart data.
-        chart_title (str): Title of the chart.
-        chart_type (str): Type of the chart (e.g., 'text') - this is still in development
-        data (DataFrame): Data to visualize.
+    Creates a Plotly Scatter trace for line charts.
+    If 'color' is None, Plotly's default colour cycle is used.
     """
+    line_opts = {"width": 2}
+    if dash:
+        line_opts["dash"] = dash
+    if color is not None:
+        line_opts["color"] = color
 
-    # Aggregate data into grouping for plot
-    numeric_cols = data.select_dtypes(include=['number']).columns.tolist()
-    data_grouped = data.groupby(["Year-Month", "Final Product Category"], as_index=False)[numeric_cols].mean()
-
-    # Create empty chart object
-    fig = go.Figure()
-
-    prods = data_grouped["Final Product Category"].unique().tolist()
-
-    # Separate projected data
-    if 'Projected' not in data_grouped:
-        data_grouped["Projected"] = 0
-
-    # Create a line for each product
-    for product in prods:
-        df_prod = data_grouped[data_grouped['Final Product Category'] == product]
-        df_prod_act = df_prod[df_prod['Projected'] != 1]
-        df_prod_pred = df_prod[df_prod['Projected'] == 1]
-
-        # Ensure continuity between actual and predicted
-        if not df_prod_act.empty and not df_prod_pred.empty:
-            last_actual_row = df_prod_act.iloc[[-1]]  # Get the last row of actual data
-            df_prod_pred = pd.concat([last_actual_row, df_prod_pred])
-
-        fig.add_trace(
-            go.Scatter(
-                x=df_prod_act['Year-Month'], y=df_prod_act[group_var],
-                mode='lines+markers', name=product_emoji_map[product],
-                line=dict(color=product_colours[product], width=1),
-                hovertemplate=("<b>Sentiment Score:</b> %{y:.2f}<br>")
-            )
-        )
-
-        # Add predicted data as dashed line
-        if not df_prod_pred.empty:
-            fig.add_trace(
-                go.Scatter(
-                    x=df_prod_pred['Year-Month'], y=df_prod_pred[group_var],
-                    mode='lines+markers', name=f"{product_emoji_map[product]} (Predicted)",
-                    line=dict(color=product_colours[product], width=2, dash='dot'),
-                    marker=dict(symbol='circle-open', size=10),
-                    hovertemplate="<i>Predicted Value</i>: %{y:.2f}<br>",
-                    showlegend=False,
-                )
-            )
-
-    # Add chart labelling
-    fig.update_layout(
-        title=title, #yaxis_range=[-0.99, 0.99],
-        xaxis_title="Month & Year", yaxis_title="Sentiment Score",
+    return go.Scatter(
+        x=df[x_col],
+        y=df[y_col],
+        mode="lines+markers",
+        name=label,
+        line=line_opts,
+        marker=dict(symbol=marker_symbol),
+        hovertemplate=hovertemplate or "<b>%{y:.2f}</b><br>",
+        showlegend=showlegend
     )
 
-    # Add chart styling and display
-    fig = style_chart(fig)
-    fig = add_red_line(fig)
+def group_and_sort(data, group_cols, agg_col, date_col="Year-Month", date_format="%d/%m/%Y"):
+    """
+    Groups data by the specified columns, aggregates the target column by mean,
+    converts the date column to datetime, and returns a DataFrame sorted by the date.
+    """
+    data[date_col] = pd.to_datetime(data[date_col], format=date_format, errors="raise")
+    grouped = data.groupby(group_cols, as_index=False)[agg_col].mean()
+    return grouped.sort_values(date_col)
+
+# --- Chart Functions ---
+
+def plot_chart_all_products(product, title, desc, data, metric, company, height=200):
+    """
+    Plots one trace per product category for a specified company.
+
+    Parameters:
+        product (str): Expected to be "all" (case-insensitive) in this view.
+        title (str): Chart title.
+        desc (str): Unused description placeholder.
+        data (DataFrame): Full sentiment dataset.
+        metric (str): Chosen metric (e.g., "Overall Sentiment Score" or an aspect name).
+        company (str): Company name to filter data.
+        height (int): Chart height in pixels.
+
+    Dashboard Usage: Used in Company Mode Overview (left/right columns) when product is "All".
+    """
+    sentiment_column = "Sentiment Score" if metric == "Overall Sentiment Score" else f"{metric}_sentiment_score"
+
+    filtered_data = data[data["Company"].str.contains(company)]
+    filtered_data = filtered_data[filtered_data['Final Product Category'] != 'Unknown']
+    if filtered_data.empty:
+        st.write("No data available.")
+        return
+
+    filtered_data["Year-Month"] = pd.to_datetime(filtered_data["Year-Month"], format='%d/%m/%Y', errors='raise')
+    grouped = filtered_data.groupby(["Year-Month", "Final Product Category"], as_index=False)[sentiment_column].mean()
+    grouped = grouped.sort_values("Year-Month")
+
+    fig = go.Figure()
+    for prod_cat in grouped["Final Product Category"].unique():
+        prod_data = grouped[grouped["Final Product Category"] == prod_cat]
+        label = product_emoji_map.get(prod_cat, prod_cat)
+        color = product_colours.get(prod_cat, None)
+        fig.add_trace(create_line_trace(
+            df=prod_data,
+            x_col="Year-Month",
+            y_col=sentiment_column,
+            label=label,
+            color=color,
+            hovertemplate=f"%{{y:.2f}}<br>"
+        ))
+    fig = apply_chart_style(fig, title=title, yaxis_title=metric, height=height)
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_chart_2(product, title, desc, data, view="aspect"):
     """
-    Plots sentiment trends for different service aspects over time for a selected product.
+    Plots sentiment trends over time for a specific product.
 
-    Args:
-        product (str): The product category to filter the data.
-        title (str): Title of the chart.
-        desc (str): Chart description (not currently used, but available for future expansion).
-        data (DataFrame): The full dataset containing sentiment scores.
+    Parameters:
+        product (str): Product name to filter data.
+        title (str): Chart title.
+        desc (str): Unused description placeholder.
+        data (DataFrame): Full sentiment dataset.
+        view (str): "aspect" for breakdown by aspect; otherwise, overall sentiment.
+
+    Dashboard Usage: Used in Company Mode Overview when a specific (non "All") product is selected.
     """
-
-    # Define aspect sentiment score column names
-    if view == "aspect":
-        aspect_columns = [f"{aspect}_sentiment_score" for aspect in aspects_map.keys()]
-    elif view == "sentiment":
-        aspect_columns = ["Sentiment Score"]
-
-    # Filter data for the selected product only
     if "all" not in product.lower():
-        data_filtered = data[data["Final Product Category"] == product]
-    else:
-        data_filtered = data
-
-    # Ensure we have valid data
-    if data_filtered.empty:
-        st.warning(f"No data available for {product}. Please select a different product.")
+        data = data[data["Final Product Category"].str.contains(product)]
+    if data.empty:
+        st.warning("No sentiment data available for the selected product.")
         return
 
-    # Group by time (Year-Month) and calculate mean sentiment scores for each aspect
-    data_grouped = data_filtered.groupby("Year-Month", as_index=False)[aspect_columns].mean()
-    data_grouped['Year-Month'] = pd.to_datetime(data_grouped['Year-Month'], format='%d/%m/%Y', errors='raise')
-
-    # Sort by chronological order
-    data_grouped = data_grouped.sort_values("Year-Month")
-
-    # Create a Plotly figure
+    data["Year-Month"] = pd.to_datetime(data["Year-Month"], format='%d/%m/%Y', errors='raise')
+    data = data.sort_values("Year-Month")
     fig = go.Figure()
     if view == "aspect":
-        # Add a line trace for each aspect
-        for aspect, aspect_column in zip(aspects, aspect_columns):
-
-            # Get the last data point for positioning the emoji
-            last_point = data_grouped[aspect_column].iloc[-1]
-            last_date = data_grouped["Year-Month"].iloc[-1]
-
-            fig.add_trace(
-                go.Scatter(
-                    x=data_grouped["Year-Month"],
-                    y=data_grouped[aspect_column],
-                    mode="lines+markers", #"lines+markers",
-                    name=aspects_map[aspect],  # Legend will display the aspect name
-                    hovertemplate=f"%{{y:.0f}}<br>", #<b>{aspect} Sentiment Score:</b>
-                    line=dict(width=2)  # Keep the lines clean and simple
-                )
-            )
-            # # Add a separate trace for the emoji, placed near the last data point.  This is the KEY change.
-            # fig.add_trace(
-            #     go.Scatter(
-            #         x=[last_date],
-            #         y=[last_point],
-            #         mode="markers+text",
-            #         text=[aspects_map[aspect]],  # Use emoji directly
-            #         textposition="middle right",
-            #         marker=dict(size=15, color='rgba(0,0,0,0)'),  # Invisible marker
-            #         showlegend=False,  # Don't show this in the legend
-            #         hoverinfo='skip' # Remove hover
-            #     )
-            # )
-    elif view == "sentiment":
-        fig.add_trace(
-            go.Scatter(
-                x=data_grouped["Year-Month"],
-                y=data_grouped["Sentiment Score"],
-                mode="lines+markers",
-                name="Overall Sentiment",
-                hovertemplate="%{y:.2f}<br>", #<b>Overall Sentiment Score:</b>
-                line=dict(width=2)
-            )
-        )
-
-
-    # Update chart aesthetics using the existing style function
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        #yaxis_title="Sentiment Score",
-        legend_title="Service Aspects",
-        legend=dict(
-            orientation="h",  # Horizontal legend
-            yanchor="top",
-            y=-0.2,  # Position below the chart
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    # Set the y-axis range to have a maximum of 95
-    fig.update_yaxes(range=[-60, 95])
-
-    fig = style_chart(fig)  # Apply styling
-    fig = add_red_line(fig)  # Add reference line at y=0
-
-    # Display the chart
+        for aspect in aspects_map:
+            col = f"{aspect}_sentiment_score"
+            label = aspects_map.get(aspect, aspect)
+            # Use aspect_colours for each aspect
+            color = aspect_colours.get(aspect, "black")
+            fig.add_trace(create_line_trace(
+                df=data,
+                x_col="Year-Month",
+                y_col=col,
+                label=label,
+                color=color,
+                hovertemplate="<b>%{y:.2f}</b><br>"
+            ))
+    else:
+        fig.add_trace(create_line_trace(
+            df=data,
+            x_col="Year-Month",
+            y_col="Sentiment Score",
+            label="Overall Sentiment",
+            color="black",
+            hovertemplate="<b>%{y:.2f}</b><br>"
+        ))
+    fig = apply_chart_style(fig, title=title)
+    fig.update_yaxes(range=[-30, 95])
     st.plotly_chart(fig, use_container_width=True)
 
-
-def plot_chart_3(product, aspect, title, desc, data):
+def plot_aspect_comparison(product, aspect, company, title, desc, data, height=500):
     """
-    Plots a multiline sentiment trend chart for a single service aspect over time,
-    where each line represents a competitor for the selected product.
+    Compares a single aspect's sentiment trend between the selected company and British Gas.
 
-    Args:
-        product (str): The product category to filter the data.
-        aspect (str): The service aspect key (e.g., "Appointment Scheduling").
-        title (str): Title of the chart.
-        desc (str): Chart description (for future use).
-        data (DataFrame): The full dataset containing sentiment scores.
+    Parameters:
+        product (str): Product name to filter data.
+        aspect (str): Aspect key (e.g. "Appointment Scheduling").
+        company (str): Selected company name.
+        title (str): Chart title.
+        desc (str): Unused description placeholder.
+        data (DataFrame): Full sentiment dataset.
+        height (int): Chart height in pixels.
+
+    Dashboard Usage: Used in Company Mode’s aspect tabs to compare the selected company vs British Gas.
     """
-    # Determine the sentiment column name for the specified aspect
-    sentiment_column = f"{aspect}_sentiment_score"
-
-    # Filter data for the selected product only
-    data_filtered = data[data["Final Product Category"] == product]
-    print(product)
-
-    # Check for valid data
-    if data_filtered.empty:
-        st.warning(f"No data available for {product}. Please select a different product.")
-        return
-
-    # Ensure 'Year-Month' is in datetime format and sort the data
-    data_filtered['Year-Month'] = pd.to_datetime(data_filtered['Year-Month'], format='%d/%m/%Y', errors='raise')
-    data_filtered = data_filtered.sort_values("Year-Month")
-
-    # Create a Plotly figure
-    fig = go.Figure()
-
-    # Get the list of all competitors in the filtered data
-    competitor_list = data_filtered["Company"].unique()
-
-    # For each competitor, group data by 'Year-Month' and calculate the mean sentiment score
-    for competitor in competitor_list:
-        competitor_data = data_filtered[data_filtered["Company"] == competitor]
-        competitor_grouped = competitor_data.groupby("Year-Month", as_index=False)[sentiment_column].mean()
-        competitor_grouped = competitor_grouped.sort_values("Year-Month")
-
-        # Add a trace for this competitor
-        fig.add_trace(
-            go.Scatter(
-                x=competitor_grouped["Year-Month"],
-                y=competitor_grouped[sentiment_column],
-                mode="lines+markers",
-                name=competitor,
-                hovertemplate=f" %{{y:.2f}}<br>", #<b>{competitor} {aspect} Sentiment Score:</b>
-                line=dict(width=2)
-            )
-        )
-
-    # Update chart layout to mimic plot_chart_2 styling
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        # yaxis_title="Sentiment Score",
-        legend_title="Competitors",
-        legend=dict(
-            orientation="h",  # Horizontal legend
-            yanchor="top",
-            y=-0.2,  # Position below the chart
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    # Set the y-axis range as before
-    fig.update_yaxes(range=[-60, 95])
-
-    # Apply existing styling functions (assumed to be defined elsewhere)
-    fig = style_chart(fig)
-    fig = add_red_line(fig)
-
-    # Display the chart in Streamlit
-    st.plotly_chart(fig, use_container_width=True)
-
-
-def plot_aspect_comparison(product, aspect, company, title, desc, data, height=200):
-    """
-    Plots a small line chart comparing the sentiment trends for a single aspect
-    between the selected company and British Gas over time.
-
-    Args:
-        product (str): The product category to filter the data.
-        aspect (str): The aspect to plot (e.g., "Appointment Scheduling").
-        company (str): The selected company. If this is "British Gas", only one line is plotted.
-        title (str): Title of the chart.
-        desc (str): Chart description (currently not used).
-        data (DataFrame): The full dataset containing sentiment scores.
-        height (int): Fixed height for the chart (in pixels). Default is 200.
-    """
-    # Determine the column name for this aspect (e.g., "Appointment Scheduling_sentiment_score")
     aspect_col = f"{aspect}_sentiment_score"
-
-    # Filter the data by product.
-    if "all" not in product.lower():
-        company_data = data[
-            (data["Company"].str.contains(company)) &
-            (data["Final Product Category"].str.contains(product))
-            ]
-        # Only filter for British Gas if the selected company is not British Gas.
-        if company != "British Gas":
-            bg_data = data[
-                (data["Company"].str.contains("British Gas")) &
-                (data["Final Product Category"].str.contains(product))
-                ]
-        else:
-            bg_data = None
-    else:
-        company_data = data[data["Company"].str.contains(company)]
-        if company != "British Gas":
-            bg_data = data[data["Company"].str.contains("British Gas")]
-        else:
-            bg_data = None
-
-    # Return if no data for the selected company.
-    if company_data.empty:
-        return
-
-    # Group the selected company data by "Year-Month" for the aspect.
-    company_grouped = company_data.groupby("Year-Month", as_index=False)[aspect_col].mean()
-    company_grouped["Year-Month"] = pd.to_datetime(company_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-    company_grouped = company_grouped.sort_values("Year-Month")
-
-    # If applicable, group British Gas data.
-    if bg_data is not None and not bg_data.empty:
-        bg_grouped = bg_data.groupby("Year-Month", as_index=False)[aspect_col].mean()
-        bg_grouped["Year-Month"] = pd.to_datetime(bg_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-        bg_grouped = bg_grouped.sort_values("Year-Month")
-    else:
-        bg_grouped = None
-
-    # Create the Plotly figure.
-    fig = go.Figure()
-
-    # Add trace for the selected company (in maroon).
-    fig.add_trace(
-        go.Scatter(
-            x=company_grouped["Year-Month"],
-            y=company_grouped[aspect_col],
-            mode="lines+markers",
-            name=company,
-            line=dict(color="maroon", width=2),
-            hovertemplate=f"<b>{company} {aspect} Sentiment:</b> %{{y:.2f}}<br>"
-        )
-    )
-
-    # If the selected company is not British Gas, add a trace for British Gas (in blue).
-    if company != "British Gas" and bg_grouped is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=bg_grouped["Year-Month"],
-                y=bg_grouped[aspect_col],
-                mode="lines+markers",
-                name="British Gas",
-                line=dict(color="blue", width=2),
-                hovertemplate=f"<b>British Gas {aspect} Sentiment:</b> %{{y:.2f}}<br>"
-            )
-        )
-
-    # Update chart layout with fixed height.
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        yaxis_title="Sentiment Score",
-        height=height,
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.2,
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    # Apply additional styling (if you have style_chart and add_red_line functions).
-    fig = style_chart(fig)
-    fig = add_red_line(fig)
-
-    # Display the chart.
-    st.plotly_chart(fig, use_container_width=True)
-
-def plot_product_sentiment_comparison(product, company, title, desc, data, height=200):
-    """
-    Plots a small line chart comparing the overall sentiment trends for a single product
-    between the selected company and British Gas over time.
-
-    Args:
-        product (str): The product category to filter the data.
-        company (str): The selected company. If "British Gas", only one line is plotted.
-        title (str): Title of the chart.
-        desc (str): Chart description (currently not used).
-        data (DataFrame): The full dataset containing sentiment scores.
-        height (int): Fixed height for the chart (in pixels). Default is 200.
-    """
-    sentiment_col = "Sentiment Score"
-
-    # Filter data for the specific product and company
-    company_data = data[
-        (data["Company"].str.contains(company)) &
-        (data["Final Product Category"].str.contains(product))
-    ]
-    if company != "British Gas":
-        bg_data = data[
-            (data["Company"].str.contains("British Gas")) &
-            (data["Final Product Category"].str.contains(product))
-        ]
+    company_data = data[(data["Company"].str.contains(company)) &
+                        (data["Final Product Category"].str.contains(product))]
+    if company.lower() != "british gas":
+        bg_data = data[(data["Company"].str.contains("British Gas")) &
+                       (data["Final Product Category"].str.contains(product))]
     else:
         bg_data = None
 
-    # Return if no data for the selected company
     if company_data.empty:
+        st.warning(f"No data available for {company}.")
         return
 
-    # Group by "Year-Month" for the sentiment score
-    company_grouped = company_data.groupby("Year-Month", as_index=False)[sentiment_col].mean()
-    company_grouped["Year-Month"] = pd.to_datetime(company_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-    company_grouped = company_grouped.sort_values("Year-Month")
-
+    company_grouped = group_and_sort(company_data, ["Year-Month"], aspect_col)
     if bg_data is not None and not bg_data.empty:
-        bg_grouped = bg_data.groupby("Year-Month", as_index=False)[sentiment_col].mean()
-        bg_grouped["Year-Month"] = pd.to_datetime(bg_grouped["Year-Month"], format='%d/%m/%Y', errors='raise')
-        bg_grouped = bg_grouped.sort_values("Year-Month")
+        bg_grouped = group_and_sort(bg_data, ["Year-Month"], aspect_col)
     else:
         bg_grouped = None
 
-    # Create the Plotly figure
     fig = go.Figure()
-
-    # Add trace for the selected company
-    fig.add_trace(
-        go.Scatter(
-            x=company_grouped["Year-Month"],
-            y=company_grouped[sentiment_col],
-            mode="lines+markers",
-            name=company,
-            line=dict(color="maroon", width=2),
-            hovertemplate=f"<b>{company} Sentiment:</b> %{{y:.2f}}<br>"
-        )
-    )
-
-    # Add trace for British Gas if applicable
-    if company != "British Gas" and bg_grouped is not None:
-        fig.add_trace(
-            go.Scatter(
-                x=bg_grouped["Year-Month"],
-                y=bg_grouped[sentiment_col],
-                mode="lines+markers",
-                name="British Gas",
-                line=dict(color="blue", width=2),
-                hovertemplate=f"<b>British Gas Sentiment:</b> %{{y:.2f}}<br>"
-            )
-        )
-
-    # Update layout
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        yaxis_title="Sentiment Score",
-        height=height,
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.2,
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    # Set the y-axis range as before
-    #fig.update_yaxes(range=[-60, 95])
-
-    # Apply styling
-    fig = style_chart(fig)
-    fig = add_red_line(fig)
-
-    # Display the chart
+    fig.add_trace(create_line_trace(
+        df=company_grouped,
+        x_col="Year-Month",
+        y_col=aspect_col,
+        label=company,
+        color="maroon",
+        hovertemplate=f"<b>{company} {aspect}:</b> %{{y:.2f}}<br>"
+    ))
+    if bg_grouped is not None:
+        fig.add_trace(create_line_trace(
+            df=bg_grouped,
+            x_col="Year-Month",
+            y_col=aspect_col,
+            label="British Gas",
+            color="blue",
+            hovertemplate=f"<b>British Gas {aspect}:</b> %{{y:.2f}}<br>"
+        ))
+    fig = apply_chart_style(fig, title=title, height=height)
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_chart_all_products(product, title, desc, data, metric, company, height=200):
+def plot_chart_3(product, aspect, title, desc, data):
     """
-    Plots a line chart that shows one trace per product (from 'Final Product Category')
-    for a given company. The metric used for plotting is chosen via a dropdown.
+    Plots market sentiment trends for a specific aspect by competitor.
 
-    Args:
-        product (str): The product indicator (should be "all" in this view).
-        title (str): Title of the chart.
-        desc (str): Description (unused currently).
-        data (DataFrame): The full sentiment dataset.
-        metric (str): The chosen metric, either "Overall Sentiment Score" or one of the aspect names.
-        company (str): The company to filter by.
-        height (int): The fixed height for the chart (default 200 pixels).
+    Parameters:
+        product (str): Product name to filter data.
+        aspect (str): Aspect key (e.g. "Appointment Scheduling").
+        title (str): Chart title.
+        desc (str): Unused description placeholder.
+        data (DataFrame): Full sentiment dataset.
+
+    Dashboard Usage: Used in Market Mode (non "All") to show aspect sentiment trends by competitor.
     """
-    # Determine the sentiment column to use.
-    if metric == "Overall Sentiment Score":
-        sentiment_column = "Sentiment Score"
-    else:
-        sentiment_column = f"{metric}_sentiment_score"
-
-    # Filter the data for the specified company.
-    filtered_data = data[data["Company"].str.contains(company)]
+    sentiment_col = f"{aspect}_sentiment_score"
+    filtered_data = data[data["Final Product Category"].str.contains(product)]
     if filtered_data.empty:
+        st.warning("No data available for the selected product.")
         return
 
-    # Filter out unknown product categorisations
-    filtered_data = filtered_data[filtered_data['Final Product Category'] != 'Unknown']
-
-    # Ensure the "Year-Month" column is datetime (if not already).
     filtered_data["Year-Month"] = pd.to_datetime(filtered_data["Year-Month"], format='%d/%m/%Y', errors='raise')
-
-    # Group by "Year-Month" and "Final Product Category", computing the mean of the sentiment column.
-    grouped_data = filtered_data.groupby(["Year-Month", "Final Product Category"], as_index=False)[
-        sentiment_column].mean()
-    grouped_data = grouped_data.sort_values("Year-Month")
-
-    # Create a Plotly figure.
+    filtered_data = filtered_data.sort_values("Year-Month")
     fig = go.Figure()
-
-    # Loop over each unique product (from "Final Product Category") and add a trace.
-    for product_cat in grouped_data["Final Product Category"].unique():
-        product_data = grouped_data[grouped_data["Final Product Category"] == product_cat]
-        # Use your product_colours mapping (if available) for colour; default to None for Plotly's color.
-        colour = product_colours.get(product_cat, None)
-
-        fig.add_trace(
-            go.Scatter(
-                x=product_data["Year-Month"],
-                y=product_data[sentiment_column],
-                mode="lines+markers",
-                name=product_emoji_map.get(product_cat),
-                line=dict(color=colour, width=2),
-                hovertemplate=f"%{{y:.2f}}<br>" #<b>{product_cat} {metric}:</b>
-            )
-        )
-
-    # Update layout.
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        yaxis_title=metric,
-        height=height,
-        legend=dict(
-            orientation="h",
-            yanchor="top",
-            y=-0.2,
-            xanchor="center",
-            x=0.5
-        )
-    )
-
-    # Set the y-axis range as before
-    fig.update_yaxes(range=[-60, 95])
-
-    # Apply your standard styling functions.
-    fig = style_chart(fig)
-    fig = add_red_line(fig)
-
-    # Display the chart.
+    for competitor in filtered_data["Company"].unique():
+        comp_data = filtered_data[filtered_data["Company"] == competitor]
+        comp_grouped = group_and_sort(comp_data, ["Year-Month"], sentiment_col)
+        # Let Plotly use its default cycle for competitor lines.
+        fig.add_trace(create_line_trace(
+            df=comp_grouped,
+            x_col="Year-Month",
+            y_col=sentiment_col,
+            label=competitor,
+            hovertemplate=f"%{{y:.2f}}<br>"
+        ))
+    fig = apply_chart_style(fig, title=title)
     st.plotly_chart(fig, use_container_width=True)
-
 
 def plot_product_overall_sentiment(product, title, data, height=400):
     """
-    Plots a line chart showing the overall sentiment trends for a product across all companies.
+    Plots overall sentiment trends for a product across all companies.
 
-    Args:
-        product (str): The product name.
+    Parameters:
+        product (str): Product name.
         title (str): Chart title.
-        data (DataFrame): Sentiment dataset.
-        height (int): Chart height.
-    """
-    import plotly.graph_objects as go
-    import pandas as pd
-    import streamlit as st
+        data (DataFrame): Full sentiment dataset.
+        height (int): Chart height in pixels.
 
-    # Filter data for the product
+    Dashboard Usage: Used in Market Mode when "All" products are selected to display overall sentiment trends.
+    """
     product_data = data[data["Final Product Category"] == product]
     if product_data.empty:
         st.write("No data available for this product.")
         return
 
-    # Get unique companies
-    companies = product_data["Company"].unique()
-
-    # Create figure
     fig = go.Figure()
-
-    for company in companies:
-        company_data = product_data[product_data["Company"] == company]
-        grouped_data = company_data.groupby("Year-Month", as_index=False)["Sentiment Score"].mean()
-        grouped_data["Year-Month"] = pd.to_datetime(grouped_data["Year-Month"], format='%d/%m/%Y')
-        grouped_data = grouped_data.sort_values("Year-Month")
-
-        # If the company is not found, default to 'gray'.
+    for company in product_data["Company"].unique():
+        comp_data = product_data[product_data["Company"] == company]
+        comp_grouped = group_and_sort(comp_data, ["Year-Month"], "Sentiment Score")
+        # Use insurer_colours for companies
         color = insurer_colours.get(company, "gray")
-
-        fig.add_trace(
-            go.Scatter(
-                x=grouped_data["Year-Month"],
-                y=grouped_data["Sentiment Score"],
-                mode="lines+markers",
-                name=company,
-                hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>",
-                line=dict(color=color)  # Using the predefined company color here
-            )
-        )
-
-    fig.update_layout(
-        title=title,
-        xaxis_title="Month & Year",
-        yaxis_title="Sentiment Score",
-        height=height,
-        legend=dict(orientation="h", yanchor="top", y=-0.2, xanchor="center", x=0.5),
-    )
-    fig = style_chart(fig)  # Apply styling
-    fig = add_red_line(fig)
-
-    # Set the y-axis range as before
+        fig.add_trace(create_line_trace(
+            df=comp_grouped,
+            x_col="Year-Month",
+            y_col="Sentiment Score",
+            label=company,
+            color=color,
+            hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>"
+        ))
+    fig = apply_chart_style(fig, title=title, height=height)
     fig.update_yaxes(range=[-40, 95])
-
     st.plotly_chart(fig, use_container_width=True)
-
