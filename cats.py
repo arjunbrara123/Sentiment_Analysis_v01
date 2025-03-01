@@ -18,6 +18,13 @@ emotion_weights = {
     'surprise': 0,
 }
 emotion_categories = list(emotion_colours.keys())
+# product_colours = {
+#     'Energy': 'limegreen',
+#     'Appliance Repair': 'darkcyan',
+#     'Gas Products': 'dodgerblue',
+#     'Plumbing & Drains': 'peru',
+#     'Unknown': 'grey'
+# }
 product_colours = {
     'Energy': 'orange',
     'Appliance Repair': 'maroon',
@@ -45,7 +52,7 @@ product_emoji_map = {
     "Home Electrical": "🔦 Home Electrical",
     "Heating": "🔥 Heating",
     "Pest Control": "🐀 Pest Control",
-    "Unknown": "🃏 Unknown"
+    "Unknown": "🃏 Unknown",
 }
 product_categories = list(product_colours.keys())
 energy_colours = {
@@ -67,18 +74,18 @@ insurer_colours = {
 }
 aspects_map = {
     "Appointment Scheduling": "⌚ Appointment Scheduling",
-    "Customer Service": "🎽️ Customer Service",
+    "Customer Service": "📞 Customer Service",
     "Response Speed": "🥇 Response Speed",
-    "Engineer Experience": "🎀 Engineer Experience",
+    "Engineer Experience": "🧑‍🔧 Engineer Experience",
     "Solution Quality": "🧠 Solution Quality",
-    "Value For Money": "💶 Value For Money",
+    "Value For Money": "💵 Value For Money",
 }
 aspects = list(aspects_map.keys())
 aspect_colours = {
-    "Appointment Scheduling": "green",
-    "Customer Service": "red",
-    "Response Speed": "blue",
-    "Engineer Experience": "orange",
-    "Solution Quality": "purple",
-    "Value For Money": "teal"
+    "Appointment Scheduling": "#6a76ac", #darkblue
+    "Customer Service": "#da3d34", #darkred
+    "Response Speed": "#ed9f40", #orange
+    "Engineer Experience": "#00c2e0", #lightblue
+    "Solution Quality": "#ff78cb", #pink
+    "Value For Money": "#00a480", #green
 }
