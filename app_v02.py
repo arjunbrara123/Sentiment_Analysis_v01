@@ -6,9 +6,6 @@ from charts import *
 from openai import OpenAI
 import hashlib
 
-#from dotenv import load_dotenv
-#load_dotenv()
-
 # Required File Inputs
 # 1) prod_summary_data - LLM product-level text summaries at company / product level, at an overall and aspect level.
 # 2) sa_monthly_data   - LLM sentiment analysis monthly data, also at company / product level, at an overall and aspect level.
@@ -107,7 +104,6 @@ with st.sidebar:
             prod_option_list.insert(0, "All")
         selected_product = st.radio(
             "Please Select a " + (" Product" if mode == "🏢 Company Mode" else " Market"),
-            #options = [product_emoji_map.get(product, product) for product in prod_option_list], #prod_option_list,
             options = [PRODUCT_CONFIG.emoji_map.get(product, product) for product in prod_option_list],
             index=0
         )
@@ -117,7 +113,6 @@ with st.sidebar:
         reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
 
     product_name = selected_product.split(' ', 1)[-1]
-    #print(f"Product: {product_name}")
     if product_name == "All":
         analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends"]
     else:
@@ -135,7 +130,6 @@ with st.sidebar:
             "Pick a Year to Display",
             ("All", "2021", "2022", "2023", "2024", "2025"),
         index=4)
-        #print(f"Year Select: {filter_year}")
 
     if filter_year != "All":
         sa_monthly_data = sa_monthly_data[sa_monthly_data['Year-Month'].str[-4:] == str(filter_year)]
@@ -145,8 +139,6 @@ with st.sidebar:
         dev_mode = st.toggle("Dev Mode", value=False)
         dev_flag = False
         if dev_mode:
-            #dev_pass = st.text_input("Enter password", type="password")
-            #if hash_password(dev_pass) == SECRET_HASH:
             dev_flag = True
         else:
             dev_pass = ""
@@ -155,8 +147,7 @@ with st.sidebar:
 if mode == "🏢 Company Mode" and not dev_flag:
 
     #st.markdown(f"# {company_name} - Competitor Analytics")
-    st.markdown(f"# Competitor Analytics")
-    st.markdown(f"**Selected Product Line:** {selected_product}")
+    st.markdown(f"# {company_name} Analytics: {product_name}")
 
     if analysis_mode == "🚁 Overview":
 
@@ -199,9 +190,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
             # Right Column: British Gas Summary (or blank if British Gas is selected)
             with col2:
-
                 if "British Gas" not in selected_company:
-
                     # Filter sentiment data for British Gas and the same product
                     if "all" not in product_name.lower():
                         filtered_data_right = sa_monthly_data[
@@ -219,46 +208,32 @@ if mode == "🏢 Company Mode" and not dev_flag:
                                                     prod_metric, "British Gas")
                         else:
                             plot_chart_2(product_name, f"British Gas", "", filtered_data_right, view)
-
-
                     else:
                         st.write("No sentiment data available for British Gas.")
-
                 else:
                     st.write("N/A (Selected company is British Gas)")
 
             plot_aspect_comparison_hist(product_name, "Sentiment Score", company_name,
-                                        f"",  # {aspects_map[aspect]} Compare",
+                                        f"",
                                         "", sa_monthly_data)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
-            #st.markdown(f"## Data Explorer")
-
-            #walker = pyg.walk(sa_monthly_data)
-
         # Only create the aspect tabs if a specific product is selected (not "All")
         if product_name != "All":
-            # The first tab (index 0) is already used for Overview.
             # Now, create a tab for each aspect.
             aspect_tab_names = [ASPECT_CONFIG.aspects_map[aspect] for aspect in ASPECT_CONFIG.aspects_map]
             # Since we already have our tabs container with "Overview" + aspect names,
-            # iterate over the aspect tabs using index starting from 1.
             for idx, aspect in enumerate(ASPECT_CONFIG.aspects_map, start=1):
                 with company_tabs[idx]:
-                    # st.markdown(f"## {aspects_map[aspect]}")
                     # Create a two-column layout
                     col1, col2 = st.columns(2)
                     with col1:
                         # Plot the aspect comparison chart.
-                        # Using the same function as before. We do NOT show any KPI metrics here.
                         plot_aspect_comparison(product_name, aspect, company_name,
                                                f"{ASPECT_CONFIG.aspects_map[aspect]} Compare",
                                                "", sa_monthly_data)
                     with col2:
-
-                        # st.markdown(f"## {aspects_map[aspect]} Analysis")
-
                         # Retrieve and display the analysis text for this aspect.
                         selected_rows = prod_summary_data[
                             (prod_summary_data["Company"] == company_name) &
@@ -270,7 +245,6 @@ if mode == "🏢 Company Mode" and not dev_flag:
                         if company_name == "British Gas":
                             aspect_difference = ""
                         else:
-                            #aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
                             aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
                             if not aspect_row.empty:
                                 sentiment_difference = aspect_row.iloc[0]["Sentiment Difference"]
@@ -281,8 +255,6 @@ if mode == "🏢 Company Mode" and not dev_flag:
                             analysis_text = aspect_row.iloc[0]["Analysis"]
                             st.markdown("### 👈 AI Generated Chart Analysis")
                             st.markdown(f"<div class='rounded-block'>{analysis_text}</div>", unsafe_allow_html=True)
-
-                            #st.markdown(analysis_text, unsafe_allow_html=True)
                         else:
                             st.write("No analysis available for this aspect.")
 
@@ -290,160 +262,62 @@ if mode == "🏢 Company Mode" and not dev_flag:
                                            f"", #{aspects_map[aspect]} Compare",
                                            "", sa_monthly_data)
 
-                        # col1, col2 = st.columns([4,5])
-                        # with col1:
-                        #     st.write("")
-                        # with col2:
-                        #     st.metric(company_name, aspect_score, aspect_difference)
-
-        # # Add divider
-        # st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
-        #
-        # if product_name == "All":
-        #     st.markdown("## Product Details")
-        #     # Get unique products for the selected company, excluding 'All'
-        #     product_list = prod_summary_data[prod_summary_data['Company'] == selected_company][
-        #         'Product'].unique().tolist()
-        #     if 'All' in product_list:
-        #         product_list.remove('All')
-        #
-        #     for prod in product_list:
-        #         with st.expander(product_emoji_map.get(prod)):
-        #             # Plot sentiment comparison chart
-        #             plot_product_sentiment_comparison(prod, company_name, f"{prod} Sentiment Comparison", "",
-        #                                               sa_monthly_data)
-        #
-        #             col1, col2 = st.columns([1, 5])
-        #             with col1:
-        #                 # Calculate and display metrics
-        #                 company_data = sa_monthly_data[
-        #                     (sa_monthly_data["Company"].str.contains(company_name)) &
-        #                     (sa_monthly_data["Final Product Category"].str.contains(prod))
-        #                     ]
-        #                 if not company_data.empty:
-        #                     avg_sentiment = company_data["Sentiment Score"].mean()
-        #                     if company_name != "British Gas":
-        #                         bg_data = sa_monthly_data[
-        #                             (sa_monthly_data["Company"].str.contains("British Gas")) &
-        #                             (sa_monthly_data["Final Product Category"].str.contains(prod))
-        #                             ]
-        #                         if not bg_data.empty:
-        #                             bg_avg_sentiment = bg_data["Sentiment Score"].mean()
-        #                             sentiment_difference = avg_sentiment - bg_avg_sentiment
-        #                         else:
-        #                             sentiment_difference = None
-        #                     else:
-        #                         sentiment_difference = None
-        #                     st.metric(company_name, f"{avg_sentiment:.2f}",
-        #                               f"{sentiment_difference:.2f}" if sentiment_difference is not None else "")
-        #                 else:
-        #                     st.write("No data available.")
-        #             with col2:
-        #                 # Display analysis text
-        #                 overall_row = prod_summary_data[
-        #                     (prod_summary_data['Company'] == selected_company) &
-        #                     (prod_summary_data['Product'] == prod) &
-        #                     (prod_summary_data['Aspect'] == 'Overall')
-        #                     ]
-        #                 if not overall_row.empty:
-        #                     analysis_text = overall_row.iloc[0]['Analysis']
-        #                     st.markdown(analysis_text, unsafe_allow_html=True)
-        #                 else:
-        #                     st.write("No overall analysis available for this product.")
-        #
-        # else:
-        #
-        #     st.markdown("## Aspect Details")
-        #     selected_rows = prod_summary_data[
-        #         (prod_summary_data["Company"] == company_name) &
-        #         (prod_summary_data["Product"] == product_name)# &
-        #         #(prod_summary_data["Year"] == (filter_year if filter_year == "All" else int(filter_year)))
-        #     ]
-        #
-        #     if not selected_rows.empty:
-        #         # Get the first (and assumed only) row for the selected company and product.
-        #         #row = selected_row.iloc[0]
-        #         st.write("Company: " + company_name)
-        #
-        #         # Use aspects_map directly to loop through the aspects.
-        #         for aspect_col, aspect_display in aspects_map.items():
-        #             aspect_name = aspect_display.split(' ', 1)[-1]
-        #             with st.expander(aspect_display):
-        #                 plot_aspect_comparison(product_name, aspect_col, company_name,
-        #                                        f"{aspect_display} Comparison", "",
-        #                                        sa_monthly_data)
-        #                 col1, col2 = st.columns([1, 5])
-        #                 with col1:
-        #                     aspect_score = int(filtered_data_left[aspect_col + "_sentiment_score"].mean())
-        #                     if company_name == "British Gas":
-        #                         aspect_difference = ""
-        #                     else:
-        #                         #aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
-        #                         aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
-        #                         if not aspect_row.empty:
-        #                             sentiment_difference = aspect_row.iloc[0]["Sentiment Difference"]
-        #                             aspect_difference = -sentiment_difference if not pd.isna(sentiment_difference) else ""
-        #                         else:
-        #                             aspect_difference = ""
-        #                     st.metric(company_name, aspect_score, aspect_difference)
-        #                 with col2:
-        #                     #st.markdown(row[aspect_col], unsafe_allow_html=True)
-        #                     aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
-        #                     if not aspect_row.empty:
-        #                         analysis_text = aspect_row.iloc[0]["Analysis"]
-        #                         #breakdown_text = aspect_row.iloc[0]["Breakdown"]
-        #                         #show_breakdown = st.toggle("Create More Detailed Analysis", key=f"breakdown_{aspect_col}")
-        #                         #st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>",
-        #                         #            unsafe_allow_html=True)
-        #                         st.markdown(analysis_text, unsafe_allow_html=True)
-        #                         #if show_breakdown:
-        #                         #st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>",
-        #                         #            unsafe_allow_html=True)
-        #                         #st.markdown(f"### 🕵️ Suggested '{aspect_name}' Actionables to consider...", unsafe_allow_html=True)
-        #                         #st.markdown(breakdown_text, unsafe_allow_html=True)
-        #                     else:
-        #                         st.write(f"No analysis available for {aspect_display}.")
-        #
-        #
-        #     else:
-        #         st.write("No aspect details available.")
-
     elif analysis_mode == "👽 Emerging Trends":
         st.markdown("## Emerging Customer Sentiment Trends")
 
     elif analysis_mode == "🙋‍♀️ Ask Alice...":
 
-        st.markdown(
-            f"<div style='font-size: 35px; text-align: center; color: #012973; margin-bottom: 10px;'><b>🔬 Ask Alice a more specific sentiment analysis question</b><br></div>",
-            unsafe_allow_html=True
-        )
-        st.markdown(
-            f"<div style='text-align: center; color: #012973; margin-bottom: 15px;'>This selection allows you to ask specific questions focused on a specific month, and specific product group, which Alice will answer based on the sentiment and online chatter data available for the specific month and product group.</div>",
-            unsafe_allow_html=True
-        )
-        col1, col2 = st.columns([2, 2])
+        st.markdown("### 💁‍♀️ Hi there, please let me know how to best respond to your query...")
+        col1, col2 = st.columns(2)
         with col1:
-            filter_llm_month = st.selectbox(
-                "Please select a specific month...",
-                reviews_data["Year-Month"].unique()
+            alice_mode = st.radio(
+                "Select Social Media / Online Data to base responses on:",
+                (f"👩‍✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀 **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
+                index=0,
             )
+            alice_selected = alice_mode.split(':', 1)[0].replace("**", "")
+            if alice_selected == "👩‍🚒 Drilldown Mode":
+                filter_llm_month = st.selectbox(
+                    "Please select a specific month...",
+                    reviews_data["Year-Month"].unique()
+                )
         with col2:
-            filter_llm_type = st.selectbox(
-                "Please select a specific customer segment",
-                ("Everyone", "Tbc...    "),
-            )
-        query_llm = st.text_area("Enter your more specific query here...")
-        client = OpenAI()
-        #convo = []
+            st.markdown(f"""<b><u>ALICE Query Settings</b></u><br>
+            - <b>Selected Company</b>: {selected_company}<br>
+            - <b>Selected Product Line</b>: {selected_product}<br>
+            - <b>Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
+            - <b>Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒 Drilldown Mode" else filter_year}<br>
+            """,unsafe_allow_html=True)
 
-        # Debugging: Print unique values of Year-Month and Final Product Category
-        #print("Unique Year-Month values:", reviews_data["Year-Month"].unique())
-        #print(filter_llm_month)
-        # Filter relevant data
-        filtered_reviews = reviews_data[
-            reviews_data["Year-Month"] == filter_llm_month]
-        filtered_reviews = filtered_reviews[
-                               filtered_reviews["Final Product Category"] == product_name][:1000].values.tolist()
+        st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
+
+        query_llm = st.text_area("Enter your specific query here...")
+        client = OpenAI()
+
+        # Filter reviews for product
+        filtered_reviews = reviews_data[reviews_data["Final Product Category"] == product_name]
+
+        # Set review limit (e.g., due to API constraints)
+        REVIEW_LIMIT = 1000
+
+        # Filter reviews based on sampling method
+        if alice_selected == "👩‍🚒 Drilldown Mode":
+            filtered_reviews = reviews_data[reviews_data["Year-Month"] == filter_llm_month]
+        elif alice_selected == "Yearly Sample":
+            # Sample proportionally from each month
+            monthly_counts = reviews_data["Year-Month"].value_counts()
+            sample_sizes = (monthly_counts / monthly_counts.sum() * REVIEW_LIMIT).astype(int)
+            filtered_reviews = pd.concat([
+                reviews_data[reviews_data["Year-Month"] == month].sample(
+                    n=min(sample_sizes[month], len(reviews_data[reviews_data["Year-Month"] == month])),
+                    random_state=42
+                )
+                for month in monthly_counts.index
+            ])
+        elif alice_selected == "Most Recent":
+            # Sort by date and take the most recent
+            filtered_reviews = reviews_data.sort_values(by="Date", ascending=False).head(REVIEW_LIMIT)
+
         OPENAI_SYSTEM_PROMPT = f"""
         You are a customer experience expert at {selected_company} Insurance. 
         You speak in a warm, friendly, and conversational tone, occasionally adding light humor or puns to keep engagement high. 
@@ -472,17 +346,18 @@ if mode == "🏢 Company Mode" and not dev_flag:
                         )},
                         {"role": "user",
                          "content": (
-                             f"Month: {filter_llm_month}\n\n"
                              f"Product Line: {product_name}\n\n"
                              f"Social Media Data: {context}\n\n"
                              f"Question: {query}\n\n"
                              "Please reference the social media data directly in your answer, "
-                             "and offer actionable steps British Gas Insurance can take."
+                             "and offer data-driven actionable steps British Gas Insurance can take."
                          )
                          }
                     ],
                     temperature=0.5,
                     max_tokens=1000,
+                    frequency_penalty=1.5,
+                    presence_penalty=1.5,
                     # max_completion_tokens=250,
                 )
 
@@ -506,10 +381,6 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 elapsed_time = datetime.now() - START_TIME
                 hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
                 minutes, seconds = divmod(remainder, 60)
-                pd.DataFrame([[datetime.now(), f"{int(hours):02}:{int(minutes):02}:{int(seconds):02}", query_llm,
-                               filter_llm_month, product_name, "Group Placeholder", answer]]).to_csv(
-                    'LLM_Runlog.csv', mode='a', index=False, header=False)
-
 
 elif mode == "🎍 Market Mode" and not dev_flag:
 
@@ -581,8 +452,6 @@ elif mode == "🎍 Market Mode" and not dev_flag:
         # Loop over the aspects and fill each tab with its respective chart and a placeholder
         for idx, aspect in enumerate(aspects):
             with tabs[idx]:
-                #st.markdown(f"## {aspects_map[aspect]}")
-
                 # Call the new plotting function; the title can be dynamically built
                 plot_chart_3(
                     product=product_name,
@@ -608,4 +477,3 @@ elif mode == "🎍 Market Mode" and not dev_flag:
 
 elif dev_flag:
     data_proc_v01.run(filter_year)
-    
