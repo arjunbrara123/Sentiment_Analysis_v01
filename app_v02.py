@@ -555,12 +555,18 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                     (market_summary_data["Product"] == product) &
                     (market_summary_data["Aspect"] == "Improvement")
                 ]
+                prod_growth = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Growth")
+                ]
 
                 if not prod_strength.empty:
                     #analysis_text = filtered_analysis.iloc[0]["Analysis"]
                     st.markdown(f"<div class='rounded-block-good'><h2>🏆 Our {product} Strengths</h2>{prod_strength.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block-bad'><h2>🏮 Our {product} Weaknesses</h2>{prod_weakness.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block'><h2>🏗️ {product} Improvement Opportunities</h2>{prod_improvement.iloc[0]["Analysis"]}", unsafe_allow_html=True)
+                    st.markdown(f"<div class='rounded-block-neutral'><h2>🌱 Growing the {product} Customer Base</h2>{prod_growth.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                 else:
                     st.markdown("No market insights available for this product.")
 
