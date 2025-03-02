@@ -36,7 +36,7 @@ section[data-testid="stSidebar"] {
     margin-left: 5px; /* Spacing between blocks */
     margin-right: 5px; /* Spacing between blocks */
     background-color: #f9f9f9; /* Background color */
-    text-align: center; /* Center align text */
+    text-align: left; /* Left align text */
 }
 .rounded-block-good {
     border: 3px solid #32CD32; /* Border color */
