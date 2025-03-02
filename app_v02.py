@@ -272,21 +272,21 @@ if mode == "🏢 Company Mode" and not dev_flag:
         with col1:
             alice_mode = st.radio(
                 "Select Social Media / Online Data to base responses on:",
-                (f"👩‍✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀 **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
+                (f"👩‍✈️✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀🛰️ **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
                 index=0,
             )
             alice_selected = alice_mode.split(':', 1)[0].replace("**", "")
-            if alice_selected == "👩‍🚒 Drilldown Mode":
+            if alice_selected == "👩‍🚒🚒 Drilldown Mode":
                 filter_llm_month = st.selectbox(
                     "Please select a specific month...",
                     reviews_data["Year-Month"].unique()
                 )
         with col2:
             st.markdown(f"""<b><u>ALICE Query Settings</b></u><br>
-            - <b>Selected Company</b>: {selected_company}<br>
-            - <b>Selected Product Line</b>: {selected_product}<br>
-            - <b>Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
-            - <b>Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒 Drilldown Mode" else filter_year}<br>
+            - <b>🏭 Selected Company</b>: {selected_company}<br>
+            - <b>🎁 Selected Product Line</b>: {selected_product}<br>
+            - <b>🧩 Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
+            - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒 Drilldown Mode" else filter_year}<br>
             """,unsafe_allow_html=True)
 
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
@@ -301,9 +301,9 @@ if mode == "🏢 Company Mode" and not dev_flag:
         REVIEW_LIMIT = 1000
 
         # Filter reviews based on sampling method
-        if alice_selected == "👩‍🚒 Drilldown Mode":
+        if alice_selected == "👩‍🚒🚒 Drilldown Mode":
             filtered_reviews = reviews_data[reviews_data["Year-Month"] == filter_llm_month]
-        elif alice_selected == "Yearly Sample":
+        elif alice_selected == "👩‍✈️✈️ Overview Mode":
             # Sample proportionally from each month
             monthly_counts = reviews_data["Year-Month"].value_counts()
             sample_sizes = (monthly_counts / monthly_counts.sum() * REVIEW_LIMIT).astype(int)
@@ -314,7 +314,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 )
                 for month in monthly_counts.index
             ])
-        elif alice_selected == "Most Recent":
+        elif alice_selected == "🧑‍🚀🛰️ Emerging Risk Mode":
             # Sort by date and take the most recent
             filtered_reviews = reviews_data.sort_values(by="Date", ascending=False).head(REVIEW_LIMIT)
 
@@ -333,8 +333,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
         Always keep the conversation focused on {selected_company} Insurance, and ensure the user knows all your recommendations are rooted in the data you've been given.
         """
-
-
+        
         def llm_inference(query, context):
             try:
                 # st.write(context)
