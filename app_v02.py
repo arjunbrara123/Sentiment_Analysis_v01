@@ -291,7 +291,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
-        query_llm = st.text_area("Enter your specific query here...")
+        query_llm = st.text_area("💬 Enter your specific query here...")
         client = OpenAI()
 
         # Filter reviews for product
@@ -338,7 +338,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
             try:
                 # st.write(context)
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",  # "o1-mini", #"gpt-4o-mini",
+                    model="gpt-4o-mini",
                     messages=[
                         {"role": "system", "content": (
                             OPENAI_SYSTEM_PROMPT
