@@ -286,7 +286,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
             - <b>🏭 Selected Company</b>: {selected_company}<br>
             - <b>🎁 Selected Product Line</b>: {selected_product}<br>
             - <b>🧩 Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
-            - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒 Drilldown Mode" else filter_year}<br>
+            - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒🚒 Drilldown Mode" else filter_year}<br>
             """,unsafe_allow_html=True)
 
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
@@ -357,7 +357,6 @@ if mode == "🏢 Company Mode" and not dev_flag:
                     max_tokens=1000,
                     frequency_penalty=1.5,
                     presence_penalty=1.5,
-                    # max_completion_tokens=250,
                 )
 
                 # Parse the response content
@@ -384,7 +383,6 @@ if mode == "🏢 Company Mode" and not dev_flag:
 elif mode == "🎍 Market Mode" and not dev_flag:
 
     if product_name == "All":
-        # Get unique products (excluding "All")
         unique_products = [p for p in sa_monthly_data["Final Product Category"].unique() if p != "Unknown"]
         tab_names = [PRODUCT_CONFIG.emoji_map.get(product, product) for product in unique_products]
         tabs = st.tabs(tab_names)
@@ -432,7 +430,6 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                 ]
 
                 if not prod_strength.empty:
-                    #analysis_text = filtered_analysis.iloc[0]["Analysis"]
                     st.markdown(f"<div class='rounded-block-good'><h2>🏆 Our {product} Strengths</h2>{prod_strength.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block-bad'><h2>🏮 Our {product} Weaknesses</h2>{prod_weakness.iloc[0]["Analysis"]}", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block'><h2>🏗️ {product} Improvement Opportunities</h2>{prod_improvement.iloc[0]["Analysis"]}", unsafe_allow_html=True)
