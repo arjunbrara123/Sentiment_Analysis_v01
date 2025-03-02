@@ -268,7 +268,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
     elif analysis_mode == "🙋‍♀️ Ask Alice...":
 
         st.markdown("### 💁‍♀️ Hi there, please let me know how to best respond to your query...")
-        col1, col2 = st.columns(2)
+        col1, col2 = st.columns([3,2])
         with col1:
             alice_mode = st.radio(
                 "Select Social Media / Online Data to base responses on:",
