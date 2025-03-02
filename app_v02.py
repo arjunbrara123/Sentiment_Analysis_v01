@@ -113,10 +113,10 @@ with st.sidebar:
         reviews_data = pd.read_csv(input_Raw_Comments_Text_data)
 
     product_name = selected_product.split(' ', 1)[-1]
-    if product_name == "All":
-        analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends"]
-    else:
+    if product_name != "All" and mode == "🏢 Company Mode":
         analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends", "🙋‍♀️ Ask Alice..."]
+    else:
+        analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends"]
 
     with st.expander("🧩 Analysis Mode", expanded=True):
         analysis_mode = st.radio(
