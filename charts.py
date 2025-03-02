@@ -32,6 +32,11 @@ and where they are used in the dashboard:
    - Purpose: Plots overall sentiment trends for a product across all companies.
    - Output: Renders a Plotly line chart (via Streamlit) showing each company’s overall sentiment.
 
+6. plot_comparison_hist(product, aspect, company, title, desc, data, height=200, metric=None, companies=None)
+   - Dashboard Usage: Called in both Company Mode Overview (for overall sentiment comparisons) and in aspect tabs when a histogram view is desired.
+   - Purpose: Creates a distribution plot (histogram/density plot) comparing sentiment scores. By default, it compares a single aspect’s sentiment between the selected company and British Gas, but by passing a different metric (e.g., "Sentiment Score") and an optional list of companies, it can also compare overall sentiment across multiple companies.
+   - Output: Renders a Plotly histogram/density chart (via Streamlit) with configurable bin size and smooth appearance.
+
 Note:
 - This module assumes that the external constants (e.g. product_emoji_map, product_colours, insurer_colours,
   aspects_map, aspects, aspect_colours, etc.) are defined in the module "cats".
@@ -344,7 +349,7 @@ def plot_product_overall_sentiment(product, title, data, height=400):
     fig.update_yaxes(range=[-40, 95])
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_aspect_comparison_hist(product, aspect, company, title, desc, data, height=200):
+def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data, height=200, metric=None, companies=None):
     """
     Creates a distribution plot (histogram/density plot) comparing a single aspect's
     sentiment scores between the selected company and British Gas for a given product.
@@ -364,8 +369,6 @@ def plot_aspect_comparison_hist(product, aspect, company, title, desc, data, hei
         - Selected company: maroon
         - British Gas: blue
     """
-    # Determine the column name for the aspect sentiment scores.
-    aspect_col = f"{aspect}_sentiment_score"
 
     # Filter data for the selected product.
     product_data = data[data["Final Product Category"].str.contains(product)]
@@ -421,4 +424,3 @@ def plot_aspect_comparison_hist(product, aspect, company, title, desc, data, hei
 
     # Display the figure in Streamlit.
     st.plotly_chart(fig, use_container_width=True)
-   
