@@ -389,8 +389,6 @@ elif mode == "🎍 Market Mode" and not dev_flag:
 
         for idx, product in enumerate(unique_products):
             with tabs[idx]:
-                st.markdown(f"## {PRODUCT_CONFIG.emoji_map.get(product, product)}")
-
                 # Plot overall sentiment for this product
                 plot_product_overall_sentiment(
                     product=product,
