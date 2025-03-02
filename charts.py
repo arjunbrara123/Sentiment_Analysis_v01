@@ -425,6 +425,14 @@ def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data,
     fig.update_layout(
         title=title,
         height=height,
+        xaxis=dict(
+            title="Sentiment Score",
+            title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
+        ),
+        yaxis=dict(
+            title='Prob Density',
+            title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
+        ),
         margin=dict(l=50, r=50, t=50, b=50),
         paper_bgcolor="white",
         plot_bgcolor="white",
