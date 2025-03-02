@@ -45,9 +45,11 @@ Note:
 import streamlit as st
 import pandas as pd
 import plotly.graph_objects as go
+import plotly.figure_factory as ff
 
-# Import external configurations and colour mappings from cats
-from cats import *
+# Import external configurations and colour mappings from config module
+from config import PRODUCT_CONFIG, COMPANY_CONFIG, ASPECT_CONFIG, EMOTION_CONFIG
+
 
 # --- Helper Functions ---
 
@@ -64,7 +66,7 @@ def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="Se
         title_x=0.0,
         paper_bgcolor="white",
         plot_bgcolor="white",
-        legend_title="" ,# Legend",
+        legend_title="",
         template="plotly_white",
         height=height,
         hovermode="closest",
@@ -98,12 +100,12 @@ def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="Se
     )
     return fig
 
-def create_line_trace(df, x_col, y_col, label, color=None, dash=None, hovertemplate=None, marker_symbol="circle", showlegend=True):
+def create_line_trace(df, x_col, y_col, label, color=None, dash=None, line_width=2, hovertemplate=None, marker_symbol="circle", showlegend=True):
     """
     Creates a Plotly Scatter trace for line charts.
     If 'color' is None, Plotly's default colour cycle is used.
     """
-    line_opts = {"width": 2}
+    line_opts = {"width": line_width}
     if dash:
         line_opts["dash"] = dash
     if color is not None:
@@ -161,8 +163,8 @@ def plot_chart_all_products(product, title, desc, data, metric, company, height=
     fig = go.Figure()
     for prod_cat in grouped["Final Product Category"].unique():
         prod_data = grouped[grouped["Final Product Category"] == prod_cat]
-        label = product_emoji_map.get(prod_cat, prod_cat)
-        color = product_colours.get(prod_cat, None)
+        label = PRODUCT_CONFIG.emoji_map.get(prod_cat, prod_cat)
+        color = PRODUCT_CONFIG.colours.get(prod_cat, None)
         fig.add_trace(create_line_trace(
             df=prod_data,
             x_col="Year-Month",
@@ -197,11 +199,10 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
     data = data.sort_values("Year-Month")
     fig = go.Figure()
     if view == "aspect":
-        for aspect in aspects_map:
+        for aspect in ASPECT_CONFIG.aspects_map:
             col = f"{aspect}_sentiment_score"
-            label = aspects_map.get(aspect, aspect)
-            # Use aspect_colours for each aspect
-            color = aspect_colours.get(aspect, "black")
+            label = ASPECT_CONFIG.aspects_map.get(aspect, aspect)
+            color = ASPECT_CONFIG.aspect_colours.get(aspect, "grey")
             fig.add_trace(create_line_trace(
                 df=data,
                 x_col="Year-Month",
@@ -216,7 +217,7 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
             x_col="Year-Month",
             y_col="Sentiment Score",
             label="Overall Sentiment",
-            color="black",
+            color="blue" if title == "British Gas" else "maroon",
             hovertemplate="<b>%{y:.2f}</b><br>"
         ))
     fig = apply_chart_style(fig, title=title)
@@ -278,7 +279,7 @@ def plot_aspect_comparison(product, aspect, company, title, desc, data, height=5
     fig = apply_chart_style(fig, title=title, height=height)
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_chart_3(product, aspect, title, desc, data):
+def plot_chart_3(product, aspect, title, desc, data, height=500):
     """
     Plots market sentiment trends for a specific aspect by competitor.
 
@@ -303,18 +304,24 @@ def plot_chart_3(product, aspect, title, desc, data):
     for competitor in filtered_data["Company"].unique():
         comp_data = filtered_data[filtered_data["Company"] == competitor]
         comp_grouped = group_and_sort(comp_data, ["Year-Month"], sentiment_col)
+        # Fetch the colour from insurer_colours, default to "gray" if not found.
+        color = COMPANY_CONFIG.insurer_colours.get(competitor, "gray")
+        # Set extra wide line if competitor is British Gas.
+        line_width = 4 if competitor == "British Gas" else 2
         # Let Plotly use its default cycle for competitor lines.
         fig.add_trace(create_line_trace(
             df=comp_grouped,
             x_col="Year-Month",
             y_col=sentiment_col,
             label=competitor,
+            color=color,
+            line_width=line_width,
             hovertemplate=f"%{{y:.2f}}<br>"
         ))
-    fig = apply_chart_style(fig, title=title)
+    fig = apply_chart_style(fig, title=title, height=height)
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_product_overall_sentiment(product, title, data, height=400):
+def plot_product_overall_sentiment(product, title, data, height=500):
     """
     Plots overall sentiment trends for a product across all companies.
 
@@ -336,13 +343,15 @@ def plot_product_overall_sentiment(product, title, data, height=400):
         comp_data = product_data[product_data["Company"] == company]
         comp_grouped = group_and_sort(comp_data, ["Year-Month"], "Sentiment Score")
         # Use insurer_colours for companies
-        color = insurer_colours.get(company, "gray")
+        color = COMPANY_CONFIG.insurer_colours.get(company, "gray")
+        line_width = 4 if company == "British Gas" else 2
         fig.add_trace(create_line_trace(
             df=comp_grouped,
             x_col="Year-Month",
             y_col="Sentiment Score",
             label=company,
             color=color,
+            line_width=line_width,
             hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>"
         ))
     fig = apply_chart_style(fig, title=title, height=height)
