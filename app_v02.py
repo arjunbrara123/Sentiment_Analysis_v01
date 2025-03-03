@@ -463,9 +463,6 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                     (market_summary_data["Product"] == product) &
                     (market_summary_data["Aspect"] == "Overall")
                 ]
-                print(product)
-                print(year_filter)
-                print(market_summary_data.head())
                 prod_strength = market_summary_data[
                     (market_summary_data["Year"] == year_filter) &
                     (market_summary_data["Product"] == product) &
