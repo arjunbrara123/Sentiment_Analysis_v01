@@ -113,9 +113,9 @@ if not st.session_state["authenticated"]:
     with col3:
         st.image("bgil-alice-logo1.png")
         with st.form(key="login_form"):
-            username = st.text_input("Username")
-            password = st.text_input("Password", type="password")
-            submitted = st.form_submit_button("Login")
+            username = st.text_input("👤 Username", placeholder="Your Username Here...", label_visibility="visible", help="Please enter your username here. If you do not have one, please contact the underwriting team for access to this tool.")
+            password = st.text_input("🤐 Password", type="password", placeholder="Your Password Here...")
+            submitted = st.form_submit_button(" 🔐 Login")
 
         if submitted:
             if username == VALID_USERNAME and password == VALID_PASSWORD:
