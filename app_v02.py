@@ -273,9 +273,9 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 else:
                     st.write("N/A (Selected company is British Gas)")
 
-            plot_aspect_comparison_hist(product_name, "Sentiment Score", company_name,
-                                        f"",
-                                        "", sa_monthly_data)
+            # plot_aspect_comparison_hist(product_name, "Sentiment Score", company_name,
+            #                             f"",
+            #                             "", sa_monthly_data)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
@@ -318,36 +318,38 @@ if mode == "🏢 Company Mode" and not dev_flag:
                         else:
                             st.write("No analysis available for this aspect.")
 
-                    plot_aspect_comparison_hist(product_name, aspect + "_sentiment_score", company_name,
-                                           f"", #{aspects_map[aspect]} Compare",
-                                           "", sa_monthly_data)
+                    # plot_aspect_comparison_hist(product_name, aspect + "_sentiment_score", company_name,
+                    #                        f"", #{aspects_map[aspect]} Compare",
+                    #                        "", sa_monthly_data)
 
     elif analysis_mode == "👽 Emerging Trends":
         st.markdown("## Emerging Customer Sentiment Trends")
 
     elif analysis_mode == "🙋‍♀️ Ask Alice...":
 
-        st.markdown("### 💁‍♀️ Hi there, please let me know how to best respond to your query...")
-        col1, col2 = st.columns([3,2])
-        with col1:
-            alice_mode = st.radio(
-                "Select Social Media / Online Data to base responses on:",
-                (f"👩‍✈️✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀🛰️ **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
-                index=0,
-            )
-            alice_selected = alice_mode.split(':', 1)[0].replace("**", "")
-            if alice_selected == "👩‍🚒🚒 Drilldown Mode":
-                filter_llm_month = st.selectbox(
-                    "Please select a specific month...",
-                    reviews_data["Year-Month"].unique()
-                )
-        with col2:
-            st.markdown(f"""<b><u>ALICE Query Settings</b></u><br>
-            - <b>🏭 Selected Company</b>: {selected_company}<br>
-            - <b>🎁 Selected Product Line</b>: {selected_product}<br>
-            - <b>🧩 Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
-            - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒🚒 Drilldown Mode" else filter_year}<br>
-            """,unsafe_allow_html=True)
+        # st.markdown("### 💁‍♀️ Hi there, please let me know how to best respond to your query...")
+        # col1, col2 = st.columns([3,2])
+        # with col1:
+        #     alice_mode = st.radio(
+        #         "Select Social Media / Online Data to base responses on:",
+        #         (f"👩‍✈️✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀🛰️ **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
+        #         index=0,
+        #     )
+        #     alice_selected = alice_mode.split(':', 1)[0].replace("**", "")
+        #     if alice_selected == "👩‍🚒🚒 Drilldown Mode":
+        #         filter_llm_month = st.selectbox(
+        #             "Please select a specific month...",
+        #             reviews_data["Year-Month"].unique()
+        #         )
+        # with col2:
+        #     st.markdown(f"""<b><u>ALICE Query Settings</b></u><br>
+        #     - <b>🏭 Selected Company</b>: {selected_company}<br>
+        #     - <b>🎁 Selected Product Line</b>: {selected_product}<br>
+        #     - <b>🧩 Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
+        #     - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒🚒 Drilldown Mode" else filter_year}<br>
+        #     """,unsafe_allow_html=True)
+
+        alice_selected = "👩‍✈️✈️ Overview Mode"
 
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
