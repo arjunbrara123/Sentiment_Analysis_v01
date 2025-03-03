@@ -87,6 +87,33 @@ def hash_password(password: str) -> str:
     """Hashes the password using SHA-256."""
     return hashlib.sha256(password.encode()).hexdigest()
 
+# --- Configuration: Set your credentials here ---
+VALID_USERNAME = "admin"
+VALID_PASSWORD = "password123"
+
+# --- Initialize session state for authentication ---
+if "authenticated" not in st.session_state:
+    st.session_state["authenticated"] = False
+
+# --- Login Form ---
+if not st.session_state["authenticated"]:
+
+    st.title("Please Log In")
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if username == VALID_USERNAME and password == VALID_PASSWORD:
+            st.session_state["authenticated"] = True
+            st.success("Login successful!")
+            # Refresh the page so the login form is removed
+            st.rerun()
+        else:
+            st.error("Incorrect username or password")
+            st.stop()  # Stop execution if login fails
+    else:
+        st.stop()  # Stop execution until the user presses the login button
+
 # Load required data
 @st.cache_data
 def load_agg_data(input_filepath):
