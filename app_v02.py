@@ -98,28 +98,36 @@ if "authenticated" not in st.session_state:
 # --- Login Form ---
 if not st.session_state["authenticated"]:
 
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4, col5 = st.columns([3,1,3,1,3])
     with col1:
+        st.image("bgil-competitors.png")
+    with col5:
         st.write("")
+        st.write("")
+        st.write("")
+        st.image("ai-logo.jpg")
     with col2:
-        #st.title("Please Log In")
+        st.write("")
+    with col4:
+        st.write("")
+    with col3:
         st.image("bgil-alice-logo1.png")
-        username = st.text_input("Username")
-        password = st.text_input("Password", type="password")
+        with st.form(key="login_form"):
+            username = st.text_input("Username")
+            password = st.text_input("Password", type="password")
+            submitted = st.form_submit_button("Login")
 
-        if st.button("Login"):
+        if submitted:
             if username == VALID_USERNAME and password == VALID_PASSWORD:
                 st.session_state["authenticated"] = True
                 st.success("Login successful!")
-                # Refresh the page so the login form is removed
-                st.rerun()
+                st.rerun()  # Refresh the page to remove the login form
             else:
                 st.error("Incorrect username or password")
                 st.stop()  # Stop execution if login fails
         else:
-            st.stop()  # Stop execution until the user presses the login button
-    with col3:
-        st.write("")
+            st.stop()  # Stop execution until the form is submitted
+
 
 # Load required data
 @st.cache_data
