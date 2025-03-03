@@ -7,33 +7,33 @@ Below is a list of the available chart functions along with their purpose, outpu
 and where they are used in the dashboard:
 
 1. plot_chart_all_products(product, title, desc, data, metric, company, height=200)
-   - Dashboard Usage: Called in Company Mode Overview (left/right columns) when the selected product is "All".
+   - Dashboard Usage: Company Mode, Products All, (Side by side comparisons)
    - Purpose: Plots one trace per product category for a specified company.
    - Output: Renders a Plotly line chart (via Streamlit) showing overall sentiment or a chosen aspect metric.
 
 2. plot_chart_2(product, title, desc, data, view="aspect")
-   - Dashboard Usage: Called in Company Mode Overview when a specific (non "All") product is selected.
+   - Dashboard Usage: Company Mode, Product Specific, Overview Tab
    - Purpose: Plots sentiment trends over time for a specific product.
      Can toggle between an overall sentiment view and an aspect breakdown view.
    - Output: Renders a Plotly line chart (via Streamlit).
 
 3. plot_aspect_comparison(product, aspect, company, title, desc, data, height=500)
-   - Dashboard Usage: Called in Company Mode’s aspect tabs to compare the selected company versus British Gas.
+   - Dashboard Usage: Company Mode, Product Specific, Aspect Specific Tabs
    - Purpose: Compares the sentiment trend for a single aspect between the selected company and British Gas.
    - Output: Renders a small Plotly line chart (via Streamlit) comparing the two companies.
 
 4. plot_chart_3(product, aspect, title, desc, data)
-   - Dashboard Usage: Called in Market Mode (when a specific product is selected) for each aspect’s market trends.
+   - Dashboard Usage: Market Mode, Product Specific, Aspect Specific Tabs
    - Purpose: Plots market sentiment trends for a given aspect, with one line per competitor.
    - Output: Renders a Plotly line chart (via Streamlit) showing competitor sentiment trends.
 
 5. plot_product_overall_sentiment(product, title, data, height=400)
-   - Dashboard Usage: Called in Market Mode when “All” products are selected to display overall sentiment trends.
+   - Dashboard Usage: Market Mode, Products All, Shows overall sentiment trends.
    - Purpose: Plots overall sentiment trends for a product across all companies.
    - Output: Renders a Plotly line chart (via Streamlit) showing each company’s overall sentiment.
 
 6. plot_comparison_hist(product, aspect, company, title, desc, data, height=200, metric=None, companies=None)
-   - Dashboard Usage: Called in both Company Mode Overview (for overall sentiment comparisons) and in aspect tabs when a histogram view is desired.
+   - Dashboard Usage: Company Mode, Product Specific, Overall tab and Aspects Tabs
    - Purpose: Creates a distribution plot (histogram/density plot) comparing sentiment scores. By default, it compares a single aspect’s sentiment between the selected company and British Gas, but by passing a different metric (e.g., "Sentiment Score") and an optional list of companies, it can also compare overall sentiment across multiple companies.
    - Output: Renders a Plotly histogram/density chart (via Streamlit) with configurable bin size and smooth appearance.
 
@@ -50,10 +50,9 @@ import plotly.figure_factory as ff
 # Import external configurations and colour mappings from config module
 from config import PRODUCT_CONFIG, COMPANY_CONFIG, ASPECT_CONFIG, EMOTION_CONFIG
 
-
 # --- Helper Functions ---
 
-def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="Sentiment Score", height=600, legendpos="h"):
+def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="🤬←       Sentiment Score       →🥳", height=600, legendpos="h"):
     """
     Applies consistent styling to the Plotly figure.
     Uses Arial fonts, blue border (#0490d7) with dash-dot, and adds a red dashed reference line at y=0.
@@ -348,7 +347,7 @@ def plot_product_overall_sentiment(product, title, data, height=500):
         fig.add_trace(create_line_trace(
             df=comp_grouped,
             x_col="Year-Month",
-            y_col="Sentiment Score",
+            y_col="Sentiment Score", #"👇🤬                    ↓😟                    Sentiment Score                    ↑😊                    🥳👆",
             label=company,
             color=color,
             line_width=line_width,
@@ -430,7 +429,7 @@ def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data,
             title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
         ),
         yaxis=dict(
-            title='Prob Density',
+            title='🎲 Prob Density',
             title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
         ),
         margin=dict(l=50, r=50, t=50, b=50),
