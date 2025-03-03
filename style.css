@@ -81,9 +81,9 @@ section[data-testid="stSidebar"] {
     height: 50px;
     white-space: pre-wrap;
     background-color: #F0F2F6;
-    border-radius: 4px 4px 0px 0px;
+    border-radius: 10px 10px 0px 0px;
     gap: 1px;
-    padding: 10px 30px;
+    padding: 10px 20px;
     color: #0490d7;
 }
 
@@ -101,3 +101,4 @@ section[data-testid="stSidebar"] {
 .stTabs [data-baseweb="tab-highlight"] {
     background-color: #012973 !important;
 }
+
