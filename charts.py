@@ -426,7 +426,7 @@ def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data,
         title=title,
         height=height,
         xaxis=dict(
-            title="Sentiment Score",
+            title="👈🤬                    ←😟                    Overall Sentiment Score                    😊→                    🥳👉",
             title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
         ),
         yaxis=dict(
