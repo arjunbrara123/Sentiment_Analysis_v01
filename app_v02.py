@@ -1,15 +1,72 @@
+"""
+Competitor Analytics Dashboard
+================================
+This Streamlit application provides a comprehensive dashboard for competitor analytics by visualizing sentiment 
+and market trends across different products and companies. The app supports two primary modes:
+  - "Market Mode": Displays aggregated sentiment trends and market insights across products.
+  - "Company Mode": Provides detailed sentiment analysis for a selected competitor, including comparisons with British Gas.
+
+Key Features:
+---------------
+1. Data Loading & Processing:
+   - Loads product-level text summaries (LLM generated) and monthly sentiment analysis data from CSV files.
+   - Loads market summary data with insights categorized into Strengths, Weaknesses, Improvement Opportunities, and Growth.
+   - Processes and cleans data, including date parsing and percentage value conversion.
+
+2. Page Configuration & Styling:
+   - Configures the Streamlit page with title, favicon, and layout settings.
+   - Loads custom CSS from "style.css" to apply styling across the dashboard.
+
+3. Sidebar Controls:
+   - Displays the company logo.
+   - Provides interactive widgets to select competitors, products/markets, analysis mode, and time period settings.
+   - Offers toggles for AI settings, including a chatbot ("Alice") that uses OpenAI for data-driven responses.
+
+4. Visualization & Charting:
+   - Uses Plotly for dynamic charting to display sentiment trends.
+   - Supports different chart types for overall sentiment and aspect-specific breakdowns.
+   - Includes a comparison view between the selected company and British Gas when applicable.
+
+5. AI Chatbot Integration:
+   - Integrates with OpenAI to process user queries based on social media and review data.
+   - Provides actionable insights and recommendations with a conversational tone.
+   - Offers different query modes (Overview, Emerging Trends, Drilldown) for tailored responses.
+
+6. Caching & Performance:
+   - Uses Streamlit caching (@st.cache_data) to optimize data loading and processing.
+
+Required File Inputs:
+-----------------------
+1) prod_summary_data: CSV file containing product-level LLM text summaries (both overall and aspect-specific).
+2) sa_monthly_data: CSV file with monthly sentiment analysis data at company/product level.
+3) reviews: CSV file with review data for chatbot queries.
+4) market_summary_data: CSV file with market insights.
+
+Additional Settings:
+--------------------
+- The environment variable SECRET_HASH is used for secure operations.
+- The script tracks the start time to monitor execution duration.
+- In development mode, additional data processing functions can be run (using data_proc_v01).
+
+Usage:
+------
+- Ensure that all required CSV files and assets (e.g., "company_logo.png", "style.css") are in the correct locations.
+- Set the necessary environment variables.
+- Run the application with Streamlit (e.g., `streamlit run app.py`).
+
+Dependencies:
+-------------
+- Python standard libraries: os, datetime, hashlib.
+- Third-party libraries: pandas, streamlit, plotly, OpenAI API client.
+
+"""
+
 # Import required packages
 import os
 from datetime import datetime
-
 from charts import *
 from openai import OpenAI
 import hashlib
-
-# Required File Inputs
-# 1) prod_summary_data - LLM product-level text summaries at company / product level, at an overall and aspect level.
-# 2) sa_monthly_data   - LLM sentiment analysis monthly data, also at company / product level, at an overall and aspect level.
-# 3) reviews           - Feeding into the chatbot to answer questions based from
 
 # Set Streamlit Page Config
 st.set_page_config(
