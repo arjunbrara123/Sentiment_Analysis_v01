@@ -175,12 +175,15 @@ with st.sidebar:
     else:
         analysis_mode_options = ["🚁 Overview", "👽 Emerging Trends"]
 
-    with st.expander("🧩 Analysis Mode", expanded=True):
-        analysis_mode = st.radio(
-            "Please Select Analysis",
-            options=analysis_mode_options,
-            index=0
-        )
+    if mode == "🏢 Company Mode":
+        with st.expander("🧩 Analysis Mode", expanded=True):
+            analysis_mode = st.radio(
+                "Please Select Analysis",
+                options=analysis_mode_options,
+                index=0
+            )
+    else:
+        analysis_mode = "🚁 Overview"
 
     with st.expander("⌚ Time Period Settings", expanded=False):
         filter_year = st.selectbox(
