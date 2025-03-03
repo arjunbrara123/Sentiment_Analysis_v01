@@ -87,11 +87,17 @@ section[data-testid="stSidebar"] {
     color: #0490d7;
 }
 
+.stTabs [role="tab"]:hover {
+    background-color: #CAF0F8;
+    background: linear-gradient(0deg, #DCDCDC 0%, #F0F2F6 100%);
+}
+
 .stTabs [aria-selected="true"] {
-    background-color: #0490d7;
+    background-color: #0490d7 !important;
+    background: linear-gradient(0deg, #0490d7 0%, #7ec0ee 100%) !important;
     color: #ffffff;
 }
 
 .stTabs [data-baseweb="tab-highlight"] {
-    background-color: #012973;
+    background-color: #012973 !important;
 }
