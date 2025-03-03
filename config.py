@@ -118,12 +118,13 @@ class CompanyConfig:
     })
     insurer_colours: Dict[str, str] = field(default_factory=lambda: {
         "British Gas": "#0000FF",  # blue
-        "HomeServe": "#FF0000",  # red
-        "Domestic & General": "#008B8B",  # dark cyan
-        "Corgi HomePlan": "#FFA500",  # orange
-        "247 Home Rescue": "#A52A2A",  # brown
-        "CheckATrade": "#808080",  # grey
+        "HomeServe": "#da3d34",  # dark red
+        "Domestic & General": "#00a480",  # green
+        "Corgi HomePlan": "#ed9f40",  # orange
+        "247 Home Rescue": "#ff78cb",  # pink
+        "CheckATrade": "#6a76ac",  # dark blue
     })
+
 
 
 @dataclass(frozen=True)
