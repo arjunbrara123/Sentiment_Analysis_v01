@@ -52,7 +52,7 @@ from config import PRODUCT_CONFIG, COMPANY_CONFIG, ASPECT_CONFIG, EMOTION_CONFIG
 
 # --- Helper Functions ---
 
-def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="🤬←       Sentiment Score       →🥳", height=600, legendpos="h"):
+def apply_chart_style(fig, title="", xaxis_title="Month & Year", yaxis_title="🤬←     Sentiment Score     →😁", height=600, legendpos="h"):
     """
     Applies consistent styling to the Plotly figure.
     Uses Arial fonts, blue border (#0490d7) with dash-dot, and adds a red dashed reference line at y=0.
@@ -219,8 +219,8 @@ def plot_chart_2(product, title, desc, data, view="aspect"):
             color="blue" if title == "British Gas" else "maroon",
             hovertemplate="<b>%{y:.2f}</b><br>"
         ))
-    fig = apply_chart_style(fig, title=title)
-    fig.update_yaxes(range=[-30, 95])
+    fig = apply_chart_style(fig, title=title, height=450)
+    fig.update_yaxes(range=[-25, 95])
     st.plotly_chart(fig, use_container_width=True)
 
 def plot_aspect_comparison(product, aspect, company, title, desc, data, height=500):
@@ -320,7 +320,7 @@ def plot_chart_3(product, aspect, title, desc, data, height=500):
     fig = apply_chart_style(fig, title=title, height=height)
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_product_overall_sentiment(product, title, data, height=500):
+def plot_product_overall_sentiment(product, title, data, height=450):
     """
     Plots overall sentiment trends for a product across all companies.
 
@@ -354,17 +354,23 @@ def plot_product_overall_sentiment(product, title, data, height=500):
             hovertemplate=f"<b>{company}</b><br>Month: %{{x}}<br>Sentiment: %{{y:.2f}}<br>"
         ))
     fig = apply_chart_style(fig, title=title, height=height)
-    fig.update_yaxes(range=[-40, 95])
+    fig.update_yaxes(range=[-25, 95])
     st.plotly_chart(fig, use_container_width=True)
 
-def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data, height=200, metric=None, companies=None):
+
+import streamlit as st
+import plotly.graph_objects as go
+
+
+def plot_aspect_comparison_boxplot(product, aspect_col, company, title, desc, data, height=200, metric=None,
+                                companies=None):
     """
-    Creates a distribution plot (histogram/density plot) comparing a single aspect's
-    sentiment scores between the selected company and British Gas for a given product.
+    Creates a distribution plot comparing a single aspect's sentiment scores between
+    the selected company and British Gas for a given product.
 
     Parameters:
         product (str): The product name to filter the data.
-        aspect (str): The aspect key (e.g., "Appointment Scheduling").
+        aspect_col (str): The aspect key (e.g., "Appointment Scheduling").
         company (str): The selected company.
         title (str): The chart title.
         desc (str): An unused description (placeholder).
@@ -372,7 +378,7 @@ def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data,
         height (int): Chart height in pixels.
 
     Dashboard Usage:
-        Use this function in place of plot_aspect_comparison when you want a histogram-style
+        Use this function in place of plot_aspect_comparison when you want a distribution-style
         comparison rather than a line chart. The colours remain consistent:
         - Selected company: maroon
         - British Gas: blue
@@ -396,46 +402,84 @@ def plot_aspect_comparison_hist(product, aspect_col, company, title, desc, data,
     # Extract the relevant aspect sentiment scores and drop missing values.
     company_values = company_data[aspect_col].dropna().tolist()
     group_labels = []
-    hist_data = []
+    plot_data = []  # List to store the sentiment score lists.
     colors = []
 
     if company_values:
-        hist_data.append(company_values)
-        group_labels.append(company)  # Could also use an emoji label if desired.
+        plot_data.append(company_values)
+        group_labels.append(company)
         colors.append("maroon")
 
     if bg_data is not None and not bg_data.empty:
         bg_values = bg_data[aspect_col].dropna().tolist()
         if bg_values:
-            hist_data.append(bg_values)
+            plot_data.append(bg_values)
             group_labels.append("British Gas")
             colors.append("blue")
 
     # If no valid data exists for either group, show a warning.
-    if not hist_data:
+    if not plot_data:
         st.warning("No valid sentiment scores available to plot.")
         return
 
     # Create the distribution plot.
-    # Here we use a fixed bin_size; adjust as necessary.
-    fig = ff.create_distplot(hist_data, group_labels, bin_size=3, colors=colors)
+    fig = go.Figure()
 
-    # Update layout to include title and set height.
+    # # OPTION 1: Horizontal Violin Plot (with box and mean line)
+    # for values, label, color in zip(plot_data, group_labels, colors):
+    #     fig.add_trace(go.Violin(
+    #         x=values,  # Horizontal: sentiment scores on the x-axis.
+    #         name=label,
+    #         orientation='h',
+    #         line_color=color,
+    #         box_visible=True,  # Displays a mini box plot inside the violin.
+    #         meanline_visible=True,  # Shows the mean value.
+    #         spanmode='hard'
+    #     ))
+
+    # OPTION 2: Horizontal Box Plot (alternative option)
+
+    for values, label, color in zip(plot_data, group_labels, colors):
+        fig.add_trace(go.Box(
+            x=values,
+            name=label,
+            orientation='h',
+            marker_color=color,
+            boxpoints='all',   # Shows all data points.
+            jitter=0.3         # Adds jitter to better visualize overlapping points.
+        ))
+
+    # Update layout to include title and set dimensions.
     fig.update_layout(
         title=title,
+        showlegend=True,
         height=height,
         xaxis=dict(
-            title="👈🤬                    ←😟                    Overall Sentiment Score                    😊→                    🥳👉",
+            title="👈←🤬     Overall Sentiment Score     😊→👉",
             title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
         ),
         yaxis=dict(
-            title='🎲 Prob Density',
-            title_font=dict(family="Arial, sans-serif", size=16, color="#012973")
+            title='',  # For horizontal plots, the y-axis shows group names.
+            tickvals=[],  # Optionally, you can remove tick labels.
+            ticktext=[]
         ),
         margin=dict(l=50, r=50, t=50, b=50),
         paper_bgcolor="white",
         plot_bgcolor="white",
         font=dict(family="Arial", size=14, color="#012973")
+    )
+    # Add a blue dashed-dot border around the entire chart
+    fig.update_layout(
+        title_font=dict(family="Arial Black", size=18, color="#012973"),
+        font=dict(family="Arial", size=14, color="#012973"),
+        shapes=[
+            dict(
+                type="rect", xref="paper", yref="paper",
+                x0=0, y0=0, x1=1, y1=1,
+                line=dict(color="#0490d7", width=1, dash="dot"),
+                fillcolor="rgba(0,0,0,0)"
+            )
+        ]
     )
 
     # Display the figure in Streamlit.
