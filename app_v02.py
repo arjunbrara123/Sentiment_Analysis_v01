@@ -90,7 +90,8 @@ if not st.session_state["authenticated"]:
 
     bg_login_url = "https://r4.wallpaperflare.com/wallpaper/246/739/689/digital-digital-art-artwork-illustration-abstract-hd-wallpaper-28f60d7850600cb8e04c418e2872141a.jpg"
     bg_login_url = "https://r4.wallpaperflare.com/wallpaper/503/406/494/minimalism-simple-background-digital-art-reflection-wallpaper-3b868c8d33014f293514fb996d5c9cb0.jpg"
-
+    bg_login_url = "https://raw.githubusercontent.com/arjunbrara123/Sentiment_Analysis_v01/refs/heads/main/minimalist-white-forest-line.jpg"
+  
     st.markdown(
          f"""
          <style>
