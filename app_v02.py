@@ -332,27 +332,22 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 else:
                     st.write("N/A (Selected company is British Gas)")
 
-            # Create two columns for side-by-side display
-            col1, col2 = st.columns([3,4])
+            plot_aspect_comparison_boxplot(product_name, "Sentiment Score", company_name,
+                                        f"BoxPlots Sentiment Comparison",  # {aspects_map[aspect]} Compare",
+                                        "", sa_monthly_data)
 
-            # Left Column: Selected Company's Summary
-            with col1:
-                plot_aspect_comparison_boxplot(product_name, "Sentiment Score", company_name,
-                                            f"BoxPlots Sentiment Comparison",  # {aspects_map[aspect]} Compare",
-                                            "", sa_monthly_data)
-            with col2:
-                overview_row = selected_rows[selected_rows["Aspect"] == "Overview"]
-                overview_text = overview_row.iloc[0]["Analysis"]
-                if company_name == "British Gas:":
-                    st.markdown(f"<div class='rounded-block'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
+            overview_row = selected_rows[selected_rows["Aspect"] == "Overview"]
+            overview_text = overview_row.iloc[0]["Analysis"]
+            if company_name == "British Gas:":
+                st.markdown(f"<div class='rounded-block'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
+            else:
+                sentiment_difference = int(overview_row.iloc[0]["Sentiment Difference"])
+                if sentiment_difference < 0:
+                    st.markdown(f"<div class='rounded-block-good'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
                 else:
-                    sentiment_difference = int(overview_row.iloc[0]["Sentiment Difference"])
-                    if sentiment_difference < 0:
-                        st.markdown(f"<div class='rounded-block-good'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
-                    else:
-                        st.markdown(
-                            f"<div class='rounded-block-bad'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>",
-                            unsafe_allow_html=True)
+                    st.markdown(
+                        f"<div class='rounded-block-bad'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>",
+                        unsafe_allow_html=True)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
