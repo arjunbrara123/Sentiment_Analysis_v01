@@ -1,7 +1,7 @@
 """
 Competitor Analytics Dashboard
 ================================
-This Streamlit application provides a comprehensive dashboard for competitor analytics by visualizing sentiment 
+This Streamlit application provides a comprehensive dashboard for competitor analytics by visualizing sentiment
 and market trends across different products and companies. The app supports two primary modes:
   - "Market Mode": Displays aggregated sentiment trends and market insights across products.
   - "Company Mode": Provides detailed sentiment analysis for a selected competitor, including comparisons with British Gas.
@@ -30,34 +30,22 @@ Key Features:
 5. AI Chatbot Integration:
    - Integrates with OpenAI to process user queries based on social media and review data.
    - Provides actionable insights and recommendations with a conversational tone.
-   - Offers different query modes (Overview, Emerging Trends, Drilldown) for tailored responses.
 
 6. Caching & Performance:
    - Uses Streamlit caching (@st.cache_data) to optimize data loading and processing.
 
 Required File Inputs:
 -----------------------
-1) prod_summary_data: CSV file containing product-level LLM text summaries (both overall and aspect-specific).
-2) sa_monthly_data: CSV file with monthly sentiment analysis data at company/product level.
-3) reviews: CSV file with review data for chatbot queries.
-4) market_summary_data: CSV file with market insights.
+1) company_summary_data: AI Generated summaries for 'Company Mode'.
+2) sa_monthly_data: Monthly sentiment data - aggregated up by company/market for company/market mode.
+3) reviews: Reviews for a specific company (One file per company) - Used for 'Ask Alice' mode only
+4) market_summary_data: AI Generated summaries for 'Market Mode'.
 
 Additional Settings:
 --------------------
 - The environment variable SECRET_HASH is used for secure operations.
 - The script tracks the start time to monitor execution duration.
 - In development mode, additional data processing functions can be run (using data_proc_v01).
-
-Usage:
-------
-- Ensure that all required CSV files and assets (e.g., "company_logo.png", "style.css") are in the correct locations.
-- Set the necessary environment variables.
-- Run the application with Streamlit (e.g., `streamlit run app.py`).
-
-Dependencies:
--------------
-- Python standard libraries: os, datetime, hashlib.
-- Third-party libraries: pandas, streamlit, plotly, OpenAI API client.
 
 """
 
@@ -68,10 +56,13 @@ from charts import *
 from openai import OpenAI
 import hashlib
 
+#from dotenv import load_dotenv
+#load_dotenv()
+
 # Set Streamlit Page Config
 st.set_page_config(
-    page_title="🕵️ Competitor Analytics",
-    page_icon="favicon.ico",
+    page_title="Competitor Intelligence App 🔬",
+    page_icon="images/favicon.ico",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -89,7 +80,6 @@ def hash_password(password: str) -> str:
 
 # --- Configuration: Set your credentials here ---
 VALID_USERNAME = "admin"
-VALID_PASSWORD = "password123"
 
 # --- Initialize session state for authentication ---
 if "authenticated" not in st.session_state:
@@ -98,27 +88,42 @@ if "authenticated" not in st.session_state:
 # --- Login Form ---
 if not st.session_state["authenticated"]:
 
+    bg_login_url = "https://r4.wallpaperflare.com/wallpaper/246/739/689/digital-digital-art-artwork-illustration-abstract-hd-wallpaper-28f60d7850600cb8e04c418e2872141a.jpg"
+    bg_login_url = "https://r4.wallpaperflare.com/wallpaper/503/406/494/minimalism-simple-background-digital-art-reflection-wallpaper-3b868c8d33014f293514fb996d5c9cb0.jpg"
+
+    st.markdown(
+         f"""
+         <style>
+         .stApp {{
+             background: url("{bg_login_url}");
+             background-size: cover;
+         }} 
+        .stForm {{
+            background-color: #FFFFFF;
+        }}
+         </style>
+         """,
+         unsafe_allow_html=True
+     )
+
     col1, col2, col3, col4, col5 = st.columns([3,1,3,1,3])
     with col1:
-        st.image("bgil-competitors.png")
+        st.image("images/bgil_competitors_transparent.png")
     with col5:
         st.write("")
         st.write("")
         st.write("")
-        st.image("ai-logo.jpg")
-    with col2:
-        st.write("")
-    with col4:
-        st.write("")
+        st.image("images/ai_logo_transparent.png")
     with col3:
-        st.image("bgil-alice-logo1.png")
+
         with st.form(key="login_form"):
-            username = st.text_input("👤 Username", placeholder="Your Username Here...", label_visibility="visible", help="💡 Please enter your username here. If you do not have one, please contact the underwriting team for access to this tool.")
-            password = st.text_input("🤐 Password", type="password", placeholder="Your Password Here...", label_visibility="visible", help="💡 If you have forgotten your password, please contact the underwriting team to reset this.")
+            st.image("images/bgil-alice-logo1.png")
+            username = st.text_input("👤 **Username**", placeholder="Your Username Here...", label_visibility="visible", help="💡 Please enter your username here. If you do not have one, please contact the underwriting team for access to this tool.")
+            password = st.text_input("🤐 **Password**", type="password", placeholder="Your Password Here...", label_visibility="visible", help="💡 If you have forgotten your password, please contact the underwriting team to reset this.")
             submitted = st.form_submit_button(" 🔐 Login")
 
         if submitted:
-            if username == VALID_USERNAME and password == VALID_PASSWORD:
+            if username == VALID_USERNAME and hash_password(password) == "a665a45920422f9d417e4867efdc4fb8a04a1f3fff1fa07e998e86f7f7a27ae3":
                 st.session_state["authenticated"] = True
                 st.success("Login successful!")
                 st.rerun()  # Refresh the page to remove the login form
@@ -127,7 +132,6 @@ if not st.session_state["authenticated"]:
                 st.stop()  # Stop execution if login fails
         else:
             st.stop()  # Stop execution until the form is submitted
-
 
 # Load required data
 @st.cache_data
@@ -153,6 +157,7 @@ def load_agg_data(input_filepath):
     except ValueError as e:
         print(f"Error encountered: {e}")
         return 0
+
 # Load Market Summary Data
 @st.cache_data
 def load_market_summary(input_filepath):
@@ -164,19 +169,19 @@ def load_market_summary(input_filepath):
 
     return data
 
-# Input File #1 - This contains text summaries at a product / company level, both overall and for each aspect
-prod_summary_data = pd.read_csv("LLM Prod Level Summary v2x.csv")
-company_list = prod_summary_data['Company'].unique().tolist()
+# Input File #1 - Company Mode Summary Text Data
+company_summary_data = pd.read_csv("LLM Prod Level Summary v3.csv")
+company_list = company_summary_data['Company'].unique().tolist()
 
-# Input File #2 - This contains the monthly sentiment / aspect score at a product / company level
+# Input File #2 - Monthly sentiment data - agg by company / market for company / market mode respectively
 sa_monthly_data = pd.read_csv("LLM SA Monthly Data.csv")
 
-# Input File #3 - Load Market Summary Data
-market_summary_data = load_market_summary("LLM Market Summary v2.csv")
+# Input File #3 - Market Mode Summary Text Data
+market_summary_data = load_market_summary("LLM Market Summary v3.csv")
 
 # Create a container with a white background for the sidebar controls
 with st.sidebar:
-    st.sidebar.image("company_logo.png")
+    st.sidebar.image("images/company_logo.png")
 
     with st.expander("🏫 Select Competitor", expanded=True):
         mode = st.radio(
@@ -185,7 +190,7 @@ with st.sidebar:
             index=0
         )
 
-        prod_option_list = prod_summary_data['Product'].unique().tolist()
+        prod_option_list = company_summary_data['Product'].unique().tolist()
 
         if mode == "🏢 Company Mode":
             selected_company = st.radio(
@@ -194,7 +199,7 @@ with st.sidebar:
                 index=0
             )
             company_name = selected_company #.split(' ', 1)[-1]
-            prod_option_list = prod_summary_data[prod_summary_data['Company'] == selected_company]['Product'].unique().tolist()
+            prod_option_list = company_summary_data[company_summary_data['Company'] == selected_company]['Product'].unique().tolist()
         else:
             selected_company = ""
 
@@ -241,6 +246,8 @@ with st.sidebar:
         dev_mode = st.toggle("Dev Mode", value=False)
         dev_flag = False
         if dev_mode:
+            #dev_pass = st.text_input("Enter password", type="password")
+            #if hash_password(dev_pass) == SECRET_HASH:
             dev_flag = True
         else:
             dev_pass = ""
@@ -248,15 +255,19 @@ with st.sidebar:
 # Main dashboard layout
 if mode == "🏢 Company Mode" and not dev_flag:
 
-    #st.markdown(f"# {company_name} - Competitor Analytics")
     st.markdown(f"# {company_name} Analytics: {product_name}")
-
     if analysis_mode == "🚁 Overview":
 
-        #company_tabs = st.tabs(["✈️ Overview"] + [aspects_map[aspect] for aspect in aspects_map])  # aspects_map defined earlier
         company_tabs = st.tabs(["✈️ Overview"] + [ASPECT_CONFIG.aspects_map[aspect] for aspect in ASPECT_CONFIG.aspects_map])  # aspects_map defined earlier
 
+        # Import the 'Company Mode' rows containing LLM summaries relevant to this company
+        selected_rows = company_summary_data[
+            (company_summary_data["Company"] == company_name) &
+            (company_summary_data["Product"] == product_name)
+            ]
+
         with company_tabs[0]:  # "Overview" tab
+
             # When toggled on, it represents "Aspect View". When off, it represents "Sentiment View".
             chart_toggle = st.toggle("Split Sentiment Into Aspects", value=True,
                                      help="Toggle between Aspect View (all aspects) and Sentiment View (overall sentiment)")
@@ -292,7 +303,9 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
             # Right Column: British Gas Summary (or blank if British Gas is selected)
             with col2:
+
                 if "British Gas" not in selected_company:
+
                     # Filter sentiment data for British Gas and the same product
                     if "all" not in product_name.lower():
                         filtered_data_right = sa_monthly_data[
@@ -310,22 +323,43 @@ if mode == "🏢 Company Mode" and not dev_flag:
                                                     prod_metric, "British Gas")
                         else:
                             plot_chart_2(product_name, f"British Gas", "", filtered_data_right, view)
+
+
                     else:
                         st.write("No sentiment data available for British Gas.")
+
                 else:
                     st.write("N/A (Selected company is British Gas)")
 
-            # plot_aspect_comparison_hist(product_name, "Sentiment Score", company_name,
-            #                             f"",
-            #                             "", sa_monthly_data)
+            # Create two columns for side-by-side display
+            col1, col2 = st.columns([3,4])
+
+            # Left Column: Selected Company's Summary
+            with col1:
+                plot_aspect_comparison_boxplot(product_name, "Sentiment Score", company_name,
+                                            f"BoxPlots Sentiment Comparison",  # {aspects_map[aspect]} Compare",
+                                            "", sa_monthly_data)
+            with col2:
+                overview_row = selected_rows[selected_rows["Aspect"] == "Overview"]
+                overview_text = overview_row.iloc[0]["Analysis"]
+                if company_name == "British Gas:":
+                    st.markdown(f"<div class='rounded-block'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
+                else:
+                    sentiment_difference = int(overview_row.iloc[0]["Sentiment Difference"])
+                    if sentiment_difference < 0:
+                        st.markdown(f"<div class='rounded-block-good'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>", unsafe_allow_html=True)
+                    else:
+                        st.markdown(
+                            f"<div class='rounded-block-bad'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>",
+                            unsafe_allow_html=True)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
         # Only create the aspect tabs if a specific product is selected (not "All")
         if product_name != "All":
-            # Now, create a tab for each aspect.
+            # Create a tab for each aspect.
             aspect_tab_names = [ASPECT_CONFIG.aspects_map[aspect] for aspect in ASPECT_CONFIG.aspects_map]
-            # Since we already have our tabs container with "Overview" + aspect names,
+            # iterate over the aspect tabs using index starting from 1.
             for idx, aspect in enumerate(ASPECT_CONFIG.aspects_map, start=1):
                 with company_tabs[idx]:
                     # Create a two-column layout
@@ -336,17 +370,15 @@ if mode == "🏢 Company Mode" and not dev_flag:
                                                f"{ASPECT_CONFIG.aspects_map[aspect]} Compare",
                                                "", sa_monthly_data)
                     with col2:
+
                         # Retrieve and display the analysis text for this aspect.
-                        selected_rows = prod_summary_data[
-                            (prod_summary_data["Company"] == company_name) &
-                            (prod_summary_data["Product"] == product_name)
-                            ]
                         aspect_name = ASPECT_CONFIG.aspects_map[aspect].split(' ', 1)[-1]  # adjust if needed
                         aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
                         aspect_score = int(filtered_data_left[aspect_name + "_sentiment_score"].mean())
                         if company_name == "British Gas":
                             aspect_difference = ""
                         else:
+                            #aspect_difference = int(filtered_data_left[aspect_col + "_sentiment_score"].mean()) - int(filtered_data_right[aspect_col + "_sentiment_score"].mean())
                             aspect_row = selected_rows[selected_rows["Aspect"] == aspect_name]
                             if not aspect_row.empty:
                                 sentiment_difference = aspect_row.iloc[0]["Sentiment Difference"]
@@ -357,6 +389,8 @@ if mode == "🏢 Company Mode" and not dev_flag:
                             analysis_text = aspect_row.iloc[0]["Analysis"]
                             st.markdown("### 👈 AI Generated Chart Analysis")
                             st.markdown(f"<div class='rounded-block'>{analysis_text}</div>", unsafe_allow_html=True)
+
+                            #st.markdown(analysis_text, unsafe_allow_html=True)
                         else:
                             st.write("No analysis available for this aspect.")
 
@@ -364,111 +398,105 @@ if mode == "🏢 Company Mode" and not dev_flag:
                     #                        f"", #{aspects_map[aspect]} Compare",
                     #                        "", sa_monthly_data)
 
+                        # col1, col2 = st.columns([4,5])
+                        # with col1:
+                        #     st.write("")
+                        # with col2:
+                        #     st.metric(company_name, aspect_score, aspect_difference)
+
     elif analysis_mode == "👽 Emerging Trends":
         st.markdown("## Emerging Customer Sentiment Trends")
 
     elif analysis_mode == "🙋‍♀️ Ask Alice...":
 
-        # st.markdown("### 💁‍♀️ Hi there, please let me know how to best respond to your query...")
-        # col1, col2 = st.columns([3,2])
-        # with col1:
-        #     alice_mode = st.radio(
-        #         "Select Social Media / Online Data to base responses on:",
-        #         (f"👩‍✈️✈️ **Overview Mode**: *Let's Look Across Your Whole Selected Year*: {filter_year}", "🧑‍🚀🛰️ **Emerging Risk Mode**: *Explore Emerging Trends in Recent Months*", "👩‍🚒🚒 **Drilldown Mode**: *Focus in on just one, very Specific Month...*"),
-        #         index=0,
-        #     )
-        #     alice_selected = alice_mode.split(':', 1)[0].replace("**", "")
-        #     if alice_selected == "👩‍🚒🚒 Drilldown Mode":
-        #         filter_llm_month = st.selectbox(
-        #             "Please select a specific month...",
-        #             reviews_data["Year-Month"].unique()
-        #         )
-        # with col2:
-        #     st.markdown(f"""<b><u>ALICE Query Settings</b></u><br>
-        #     - <b>🏭 Selected Company</b>: {selected_company}<br>
-        #     - <b>🎁 Selected Product Line</b>: {selected_product}<br>
-        #     - <b>🧩 Analysis Mode</b>: {alice_mode.split(':', 1)[0].replace("**", "")}<br>
-        #     - <b>⏲️ Time Period</b>: {pd.to_datetime(filter_llm_month, dayfirst=True).strftime("%B %Y") if alice_selected == "👩‍🚒🚒 Drilldown Mode" else filter_year}<br>
-        #     """,unsafe_allow_html=True)
-
-        alice_selected = "👩‍✈️✈️ Overview Mode"
-
         st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
 
-        query_llm = st.text_area("💬 Enter your specific query here...")
+        query_llm = st.text_area(f"💁‍♀️ **Alice**: *What would you like to know about {company_name}'s {product_name} Insurance?*")
         client = OpenAI()
 
-        # Filter reviews for product
-        filtered_reviews = reviews_data[reviews_data["Final Product Category"] == product_name]
+        def sample_reviews(selected_reviews):
 
-        # Set review limit (e.g., due to API constraints)
-        REVIEW_LIMIT = 1000
+            # Filter reviews for product
+            filtered_reviews = selected_reviews[selected_reviews["Final Product Category"] == product_name]
 
-        # Filter reviews based on sampling method
-        if alice_selected == "👩‍🚒🚒 Drilldown Mode":
-            filtered_reviews = reviews_data[reviews_data["Year-Month"] == filter_llm_month]
-        elif alice_selected == "👩‍✈️✈️ Overview Mode":
+            # Filter by year if it’s not "All"
+            if filter_year != "All":
+                filtered_reviews = filtered_reviews[filtered_reviews["Year-Month"].str[-4:] == str(filter_year)]
+
+            # Set review limit (e.g., due to API constraints)
+            REVIEW_LIMIT = 200
+
             # Sample proportionally from each month
             monthly_counts = reviews_data["Year-Month"].value_counts()
             sample_sizes = (monthly_counts / monthly_counts.sum() * REVIEW_LIMIT).astype(int)
             filtered_reviews = pd.concat([
-                reviews_data[reviews_data["Year-Month"] == month].sample(
-                    n=min(sample_sizes[month], len(reviews_data[reviews_data["Year-Month"] == month])),
+                filtered_reviews[filtered_reviews["Year-Month"] == month].sample(
+                    n=min(sample_sizes[month], len(filtered_reviews[filtered_reviews["Year-Month"] == month])),
                     random_state=42
                 )
                 for month in monthly_counts.index
             ])
-        elif alice_selected == "🧑‍🚀🛰️ Emerging Risk Mode":
-            # Sort by date and take the most recent
-            filtered_reviews = reviews_data.sort_values(by="Date", ascending=False).head(REVIEW_LIMIT)
 
-        OPENAI_SYSTEM_PROMPT = f"""
-        You are a customer experience expert at {selected_company} Insurance. 
-        You speak in a warm, friendly, and conversational tone, occasionally adding light humor or puns to keep engagement high. 
-        Your task is to analyse the company's social media data to provide well-reasoned, data-driven insights. 
-        Focus on the biggest themes or commonalities between a large volume of comments as opposed to relying or referencing any one specific comment, unless there is one comment which is interesting and representative of how a very large number of comments feel.
-        Remember the audience is {selected_company} senior members, so try and phrase things that doesn't show the company in an overly negative light or in a way that might offend anyone.
-        When you answer a question, do the following:
+            return filtered_reviews
 
-        1. Summarise the key data points from the social media context that support your answer, accounting for what product line it is too.
-        2. Provide 2-3 concrete, actionable recommendations for the business, explaining briefly why these recommendations follow from the data and given product line.
-        3. Use a short concluding paragraph or bullet points to tie everything together. 
-        4. If the data is insufficient to answer the question, or the question is not relevant to {selected_company}, politely say so and explain why.
+        selected_reviews = sample_reviews(reviews_data)
 
-        Always keep the conversation focused on {selected_company} Insurance, and ensure the user knows all your recommendations are rooted in the data you've been given.
-        """
-        
-        def llm_inference(query, context):
+        # If the company isn’t British Gas, load British Gas reviews too
+        if company_name != "British Gas":
+            bg_reviews_data = pd.read_csv("Cleaned Reviews British Gas.csv")
+            bg_reviews = sample_reviews(bg_reviews_data)
+        else:
+            bg_reviews = None
+
+        def prepare_context(selected_reviews, bg_reviews):
+            context = f"Selected Company ({selected_company}) Reviews:\n{selected_reviews.to_string(index=False)}\n\n"
+
+            if bg_reviews is not None:
+                context += f"British Gas Reviews:\n{bg_reviews.to_string(index=False)}\n\n"
+
+            return context
+
+
+        def generate_response(context, query, product, selected_company, bg_reviews):
+            client = OpenAI()  # Assumes your API key is set up in your environment
+
+            system_prompt = f"""
+            You are a customer experience expert at British Gas Insurance. 
+            You speak in a warm, friendly, and conversational tone, occasionally adding light humor or puns to keep engagement high. 
+            Your task is to analyze the provided social media data and reviews to provide well-reasoned, data-driven insights. 
+            Focus on the biggest themes or commonalities between a large volume of comments as opposed to relying or referencing any one specific comment, unless there is one comment which is interesting and representative of how a very large number of comments feel.
+            Remember the audience is British Gas senior members, so try and phrase things that doesn’t show the company in an overly negative light or in a way that might offend anyone.
+
+            When you answer a question, do the following:
+            1. First, provide a concise and very specific answer to the question, and based on a data-driven rationale from the data.
+            2. Then, concisely list 1 to 2 at most of the biggest and specific key points from the data that evidence your answer, including example comments or reviews that demonstrate the data-driven trend you are refencing to answer your question.
+            3. If you cannot answer the question based on the data, clearly state that and explain why.
+
+            Always keep the conversation focused on British Gas Insurance, and ensure the user knows all your recommendations are rooted in the data you’ve been given by clearly stating how it is. Try to also always be as specific as possible and avoid vagueness or waffle in every part of your answer. Feel free to use emojis or professional formatting to make sure the answer looks visually well formatted too, and British Gas related puns to be more engaging.
+            """
+
+            if bg_reviews is not None:
+                system_prompt += f"\n\nYou are comparing British Gas with {selected_company} for the {product} product line. Provide insights based on the comparison of their reviews."
+            else:
+                system_prompt += f"\n\nYou are analyzing reviews for British Gas's {product} product line."
+
             try:
-                # st.write(context)
                 response = client.chat.completions.create(
-                    model="gpt-4o-mini",
+                    model="gpt-4o-mini",  # Use your preferred model
                     messages=[
-                        {"role": "system", "content": (
-                            OPENAI_SYSTEM_PROMPT
-                        )},
-                        {"role": "user",
-                         "content": (
-                             f"Product Line: {product_name}\n\n"
-                             f"Social Media Data: {context}\n\n"
-                             f"Question: {query}\n\n"
-                             "Please reference the social media data directly in your answer, "
-                             "and offer data-driven actionable steps British Gas Insurance can take."
-                         )
-                         }
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": f"Social Media Data: {context}\n\nQuestion: {query}"}
                     ],
-                    temperature=0.5,
-                    max_tokens=1000,
+                    temperature=0.3,  # Lower for more focused responses
+                    max_tokens=1000,  # Reduce to 500-750 for shorter answers if desired
                     frequency_penalty=1.5,
-                    presence_penalty=1.5,
+                    presence_penalty=1.5
                 )
 
-                # Parse the response content
                 answer = response.choices[0].message.content.strip()
                 return answer
-
             except Exception as e:
-                return f"Inferencing Failed, Error: {str(e)}"
+                return f"Oops, something went wrong! Error: {str(e)}"
 
 
         if st.button("🙋‍♀️ Ask Alice"):
@@ -477,16 +505,15 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 st.markdown(f"<b>💁‍♀️ Alice</b>: Please enter a question, the query box is currently blank...",
                             unsafe_allow_html=True)
             else:
-                answer = llm_inference(query_llm, filtered_reviews)
+                context = prepare_context(selected_reviews, bg_reviews)
+                answer = generate_response(context, query_llm, product_name, selected_company, bg_reviews)
                 st.markdown(f"<b>💁‍♀️ Alice</b>:", unsafe_allow_html=True)
                 st.write(answer)
-                elapsed_time = datetime.now() - START_TIME
-                hours, remainder = divmod(elapsed_time.total_seconds(), 3600)
-                minutes, seconds = divmod(remainder, 60)
 
 elif mode == "🎍 Market Mode" and not dev_flag:
 
     if product_name == "All":
+        # Get unique products (excluding "All")
         unique_products = [p for p in sa_monthly_data["Final Product Category"].unique() if p != "Unknown"]
         tab_names = [PRODUCT_CONFIG.emoji_map.get(product, product) for product in unique_products]
         tabs = st.tabs(tab_names)
@@ -527,8 +554,14 @@ elif mode == "🎍 Market Mode" and not dev_flag:
                     (market_summary_data["Product"] == product) &
                     (market_summary_data["Aspect"] == "Growth")
                 ]
+                prod_summary = market_summary_data[
+                    (market_summary_data["Year"] == year_filter) &
+                    (market_summary_data["Product"] == product) &
+                    (market_summary_data["Aspect"] == "Summary")
+                ]
 
                 if not prod_strength.empty:
+                    #analysis_text = filtered_analysis.iloc[0]["Analysis"]
                     st.markdown(f"<div class='rounded-block-good'><div style='text-align:center'><h2>🏆 Our {product} Strengths</h2><div><div style='text-align:left'>{prod_strength.iloc[0]["Analysis"]}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block-bad'><div style='text-align:center'><h2>🏮 Our {product} Weaknesses</h2><div><div style='text-align:left'>{prod_weakness.iloc[0]["Analysis"]}</div>", unsafe_allow_html=True)
                     st.markdown(f"<div class='rounded-block'><div style='text-align:center'><h2>🏗️ {product} Improvement Opportunities</h2><div><div style='text-align:left'>{prod_improvement.iloc[0]["Analysis"]}</div>", unsafe_allow_html=True)
@@ -547,6 +580,8 @@ elif mode == "🎍 Market Mode" and not dev_flag:
         # Loop over the aspects and fill each tab with its respective chart and a placeholder
         for idx, aspect in enumerate(aspects):
             with tabs[idx]:
+                #st.markdown(f"## {aspects_map[aspect]}")
+
                 # Call the new plotting function; the title can be dynamically built
                 plot_chart_3(
                     product=product_name,
@@ -572,3 +607,4 @@ elif mode == "🎍 Market Mode" and not dev_flag:
 
 elif dev_flag:
     data_proc_v01.run(filter_year)
+    #print("Test 01")
