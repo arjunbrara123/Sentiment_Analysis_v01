@@ -465,8 +465,8 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
             system_prompt = f"""
             You are a commercial strategy expert at British Gas Insurance. 
-            
             Your task is to analyse the provided social media data and reviews to provide well-reasoned, data-driven insights.
+            Please provide your analysis in a single paragraph and in a consise manner.
             """
 
             if bg_reviews is not None:
