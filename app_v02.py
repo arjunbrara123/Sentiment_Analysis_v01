@@ -92,20 +92,20 @@ if not st.session_state["authenticated"]:
     bg_login_url = "https://r4.wallpaperflare.com/wallpaper/503/406/494/minimalism-simple-background-digital-art-reflection-wallpaper-3b868c8d33014f293514fb996d5c9cb0.jpg"
     bg_login_url = "https://raw.githubusercontent.com/arjunbrara123/Sentiment_Analysis_v01/refs/heads/main/minimalist-white-forest-line.jpg"
   
-    st.markdown(
-         f"""
-         <style>
-         .stApp {{
-             background: url("{bg_login_url}");
-             background-size: cover;
-         }} 
-        .stForm {{
-            background-color: #FFFFFF;
-        }}
-         </style>
-         """,
-         unsafe_allow_html=True
-     )
+    # st.markdown(
+    #      f"""
+    #      <style>
+    #      .stApp {{
+    #          background: url("{bg_login_url}");
+    #          background-size: cover;
+    #      }} 
+    #     .stForm {{
+    #         background-color: #FFFFFF;
+    #     }}
+    #      </style>
+    #      """,
+    #      unsafe_allow_html=True
+    #  )
 
     col1, col2, col3, col4, col5 = st.columns([3,1,3,1,3])
     with col1:
