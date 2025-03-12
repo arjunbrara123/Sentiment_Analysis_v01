@@ -148,7 +148,7 @@ section[data-testid="stSidebar"] {
 
 @media (min-width: 768px) {
   .button-53 {
-    padding: .75rem 3rem;
+    padding: .75rem 1rem;
     font-size: 1.25rem;
   }
 }
