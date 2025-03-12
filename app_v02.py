@@ -464,7 +464,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
             """
 
             if bg_reviews is not None:
-                system_prompt += f"\n\nYou are comparing British Gas with {selected_company} for the {product} product line. Provide insights based on the comparison of their reviews."
+                system_prompt += f"\n\nYou are comparing British Gas with {selected_company} for the {product} product line."
             else:
                 system_prompt += f"\n\nYou are analyzing reviews for British Gas's {product} product line."
 
