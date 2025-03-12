@@ -88,25 +88,6 @@ if "authenticated" not in st.session_state:
 # --- Login Form ---
 if not st.session_state["authenticated"]:
 
-    bg_login_url = "https://r4.wallpaperflare.com/wallpaper/246/739/689/digital-digital-art-artwork-illustration-abstract-hd-wallpaper-28f60d7850600cb8e04c418e2872141a.jpg"
-    bg_login_url = "https://r4.wallpaperflare.com/wallpaper/503/406/494/minimalism-simple-background-digital-art-reflection-wallpaper-3b868c8d33014f293514fb996d5c9cb0.jpg"
-    bg_login_url = "https://raw.githubusercontent.com/arjunbrara123/Sentiment_Analysis_v01/refs/heads/main/minimalist-white-forest-line.jpg"
-  
-    # st.markdown(
-    #      f"""
-    #      <style>
-    #      .stApp {{
-    #          background: url("{bg_login_url}");
-    #          background-size: cover;
-    #      }} 
-    #     .stForm {{
-    #         background-color: #FFFFFF;
-    #     }}
-    #      </style>
-    #      """,
-    #      unsafe_allow_html=True
-    #  )
-
     col1, col2, col3, col4, col5 = st.columns([3,1,3,1,3])
     with col1:
         st.image("images/bgil_competitors_transparent.png")
@@ -117,8 +98,8 @@ if not st.session_state["authenticated"]:
         st.image("images/ai_logo_transparent.png")
     with col3:
 
+        st.image("images/bgil-alice-logo1.png")
         with st.form(key="login_form"):
-            st.image("images/bgil-alice-logo1.png")
             username = st.text_input("👤 **Username**", placeholder="Your Username Here...", label_visibility="visible", help="💡 Please enter your username here. If you do not have one, please contact the underwriting team for access to this tool.")
             password = st.text_input("🤐 **Password**", type="password", placeholder="Your Password Here...", label_visibility="visible", help="💡 If you have forgotten your password, please contact the underwriting team to reset this.")
             submitted = st.form_submit_button(" 🔐 Login")
@@ -351,9 +332,13 @@ if mode == "🏢 Company Mode" and not dev_flag:
                             f"<div class='rounded-block-bad'>{"Write up..." if len(overview_text) == 0 else overview_text}</div>",
                             unsafe_allow_html=True)
             with col2:
-                st.markdown("### 👪💸 [BETA] Demographic Analysis")
+                demographic_row = selected_rows[selected_rows["Aspect"] == "Demographic"]
+                demographic_text = demographic_row.iloc[0]["Analysis"]
+                income_row = selected_rows[selected_rows["Aspect"] == "Income"]
+                income_text = income_row.iloc[0]["Analysis"]
+                st.markdown("###  Demographic Analysis 🧪[BETA]")
                 st.markdown(
-                    f"<div class='rounded-block-neutral'>text...</div>",
+                    f"<div class='rounded-block-neutral'>👪 <b>Gender</b>: {demographic_text}<br><br>💸 <b>Income</b>:{income_text}</div>",
                     unsafe_allow_html=True)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
@@ -427,7 +412,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 filtered_reviews = filtered_reviews[filtered_reviews["Year-Month"].str[-4:] == str(filter_year)]
 
             # Set review limit (e.g., due to API constraints)
-            REVIEW_LIMIT = 200
+            REVIEW_LIMIT = 50 #200
 
             # Sample proportionally from each month
             monthly_counts = reviews_data["Year-Month"].value_counts()
@@ -477,12 +462,16 @@ if mode == "🏢 Company Mode" and not dev_flag:
             try:
                 response = client.chat.completions.create(
                     model="gpt-4o-mini",  # Use your preferred model
+                    #model="o3-mini",  # Use your preferred model
                     messages=[
                         {"role": "system", "content": system_prompt},
+                        #{"role": "developer", "content": system_prompt},
                         {"role": "user", "content": f"Social Media Data: {context}\n\nQuestion: {query}"}
                     ],
                     temperature=0.3,  # Lower for more focused responses
                     max_tokens=1000,  # Reduce to 500-750 for shorter answers if desired
+                    #max_completion_tokens=1000,  # Reduce to 500-750 for shorter answers if desired
+                    #reasoning_effort='medium',
                     frequency_penalty=1.5,
                     presence_penalty=1.5
                 )
