@@ -336,7 +336,11 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 demographic_text = demographic_row.iloc[0]["Analysis"]
                 income_row = selected_rows[selected_rows["Aspect"] == "Income"]
                 income_text = income_row.iloc[0]["Analysis"]
-                st.markdown("###  Demographic Analysis 🧪[BETA]")
+                col2a, col2b = st.columns([3,1])
+                with col2a:
+                    st.markdown("### 🧪 Demographic Analysis", unsafe_allow_html=True)
+                with col2b:
+                    st.markdown("<span class=""button-53"" role=""button"">BETA</span>", unsafe_allow_html=True)
                 st.markdown(
                     f"<div class='rounded-block-neutral'>👪 <b>Gender</b>:  {demographic_text}<br><br>💸 <b>Income</b>:  {income_text}</div>",
                     unsafe_allow_html=True)
