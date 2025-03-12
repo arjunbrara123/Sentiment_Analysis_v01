@@ -459,10 +459,12 @@ if mode == "🏢 Company Mode" and not dev_flag:
 
             system_prompt = f"""
             You are a commercial strategy expert at British Gas Insurance. 
-            Your task is to analyse the provided social media data and reviews to provide well-reasoned, data-driven insights.
+            
             Please provide your analysis in bullet points.
             """
 
+            #Your task is to analyse the provided social media data and reviews to provide well-reasoned, data-driven insights.
+          
             if bg_reviews is not None:
                 system_prompt += f"\n\nYou are comparing British Gas with {selected_company} for the {product} product line."
             else:
