@@ -347,7 +347,7 @@ if mode == "🏢 Company Mode" and not dev_flag:
                 income_text = income_row.iloc[0]["Analysis"]
 
                 st.markdown(
-                    f"<div class='rounded-block-neutral'>👪 <b>Gender</b>:  {demographic_text}<br><br>💸 <b>Income</b>:  {income_text}<br><br>🗺️ <b>Location</b>: In development, tbc... 🪲</div>",
+                    f"<div class='rounded-block-neutral'>👪 <b>Gender</b>:  {demographic_text}<br><br>💸 <b>Income</b>:  {income_text}</div>",
                     unsafe_allow_html=True)
 
             st.markdown("<hr style='border: 1px solid #0490d7; margin: 20px 0;'>", unsafe_allow_html=True)
