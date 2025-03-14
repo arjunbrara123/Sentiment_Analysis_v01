@@ -237,7 +237,11 @@ with st.sidebar:
 # Main dashboard layout
 if mode == "🏢 Company Mode" and not dev_flag:
 
-    st.markdown(f"# {company_name} Analytics: {product_name}")
+    col1, col2 = st.columns([1,7])
+    with col1:
+        st.image(f"images/{company_name.lower()} logo.png", width=100)
+    with col2:
+        st.markdown(f"# {company_name} Analytics: {product_name}")
     if analysis_mode == "🚁 Overview":
 
         company_tabs = st.tabs(["✈️ Overview"] + [ASPECT_CONFIG.aspects_map[aspect] for aspect in ASPECT_CONFIG.aspects_map])  # aspects_map defined earlier
