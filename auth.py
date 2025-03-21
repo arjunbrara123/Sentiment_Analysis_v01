@@ -21,8 +21,8 @@ How It Works:
 
 import hashlib
 import streamlit as st
-from dotenv import load_dotenv
-load_dotenv()
+#from dotenv import load_dotenv
+#load_dotenv()
 
 # --- Configuration for authentication ---
 VALID_USERNAME = "123"
