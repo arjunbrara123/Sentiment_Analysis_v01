@@ -459,7 +459,7 @@ def render_dev_mode(filter_year: str) -> None:
 def run() -> None:
     # Main function that orchestrates the dashboard workflow.
 
-    load_dotenv()  # Load environment variables
+    #load_dotenv()  # Load environment variables
 
     # Authenticate the user; further execution is halted until login is successful.
     if not auth.login_form():
