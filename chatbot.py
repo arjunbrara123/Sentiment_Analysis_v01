@@ -17,8 +17,29 @@ How It Works:
 - Finally, it constructs a system prompt and communicates with the OpenAI API to provide concise, data-driven insights.
 """
 
+# Import Required Modules
 import pandas as pd
 from openai import OpenAI
+
+# ------------------------------------------------------------------------------
+# OpenAI API Configuration Parameters:
+# ------------------------------------------------------------------------------
+MODEL = "gpt-4o-mini"       #   - The model to use for generating responses.
+TEMPERATURE = 0.3           #   - Controls the randomness in the output. Lower values yield more deterministic responses.
+MAX_TOKENS = 1000           #   - Maximum number of tokens for the generated response.
+FREQUENCY_PENALTY = 1.5     #   - Reduces repetition by penalising frequent words in the output.
+PRESENCE_PENALTY = 1.5      #   - Encourages the introduction of new topics by penalising words already present in the prompt.
+
+# Base system prompt used for generating chatbot responses.
+BASE_SYSTEM_PROMPT = (
+    "You are a commercial strategy expert at British Gas Insurance. "
+    "Your task is to analyse the provided social media data and reviews to provide well-reasoned, data-driven insights. "
+    "Please provide your analysis in a single paragraph in a concise manner."
+)
+
+# ------------------------------------------------------------------------------
+# AI Chatbot Utility Functions:
+# ------------------------------------------------------------------------------
 
 def sample_reviews(reviews_data: pd.DataFrame, product_name: str, filter_year: str, review_limit: int = 50,
                    random_state: int = 42) -> pd.DataFrame:
@@ -55,11 +76,7 @@ def generate_response(context: str, query: str, product: str, selected_company: 
     # Calls the OpenAI API to generate a chatbot response based on the provided context and query.
 
     client = OpenAI()  # Assumes API key is set in the environment
-    system_prompt = (
-        "You are a commercial strategy expert at British Gas Insurance. "
-        "Your task is to analyze the provided social media data and reviews to provide well-reasoned, data-driven insights. "
-        "Please provide your analysis in a single paragraph in a concise manner."
-    )
+    system_prompt = BASE_SYSTEM_PROMPT
     if bg_reviews is not None:
         system_prompt += f"\n\nYou are comparing British Gas with {selected_company} for the {product} product line. Provide insights based on the comparison of their reviews."
     else:
@@ -67,15 +84,15 @@ def generate_response(context: str, query: str, product: str, selected_company: 
 
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",  # Use your desired model
+            model=MODEL,
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": f"Social Media Data: {context}\n\nQuestion: {query}"}
             ],
-            temperature=0.3,
-            max_tokens=1000,
-            frequency_penalty=1.5,
-            presence_penalty=1.5
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
+            frequency_penalty=FREQUENCY_PENALTY,
+            presence_penalty=PRESENCE_PENALTY
         )
         answer = response.choices[0].message.content.strip()
         return answer
