@@ -21,7 +21,10 @@ MAX_TOKENS_PER_CHUNK = 16000
 WAIT_BETWEEN_CALLS = 1
 YEAR = 2024
 QUALITY_SCORE_THRESHOLD = 0.89
-
+TEMPERATURE = 0.2
+FREQUENCY_PENALTY = 1.8
+PRESENCE_PENALTY = 1.8
+TOP_P = 1.0  # using full probability distribution
 ASPECTS = ["Appointment Scheduling", "Customer Service", "Response Speed",
            "Engineer Experience", "Solution Quality", "Value For Money"]
 
@@ -36,12 +39,13 @@ async def analyze_comparison(session, competitor, category, aspect, year, sentim
         {"role": "system", "content": (
             f"You are an expert competitor analyst writing for senior board members. "
             f"Compare British Gas to {competitor} in the product category '{category}' for the aspect '{aspect}' in {year}. "
-            f"The sentiment difference is {sentiment_diff:.2f} (positive means British Gas is better). "
+            f"The sentiment difference is {sentiment_diff:.2f} (positive means British Gas is better). Do not mention the exact number, but discuss which one was better and why. "
             f"Your response should be formatted with clear, separate paragraphs. "
             f"Begin with one or two concise paragraphs that analyze the reviews in a data-driven way—explain which company performs better and describe the key trend(s) driving this difference. "
-            f"Support your analysis with 1-2 brief, specific review examples (either paraphrased or quoted) that best illustrate this trend. "
-            f"Finally, on a new line and after an empty line, add a concluding paragraph that starts with a bold markdown header '**Key Takeaway:**' followed by one or two very specific, actionable insights for British Gas. "
-            f"Keep the language focused and avoid vagueness. "
+            f"Support your analysis with 1-2 brief, specific review examples (either paraphrased or quoted) that best illustrate the trend you are describing. "
+            f"Finally, on a new line and after an empty line, ensure you always add a concluding paragraph that starts with a bold markdown header '**Key Takeaway:**' followed by one or two very specific, actionable insights for British Gas. "
+            f"This final key insight is extremely important. "
+            f"Always keep the language focused and avoid vagueness throughout. "
             f"Example:\n\n"
             f"CheckATrade customers report faster response times than British Gas customers. Since independent contractors manage their own schedules, many can offer same-day or next-day service—especially for urgent boiler repairs. Reviews indicate that some CheckATrade engineers prioritize emergency cases more efficiently than a large organization can.\n\n"
             f"British Gas customers, however, often mention delays in dispatching engineers, particularly for non-urgent issues. The centralized dispatch system, while effective for structured planning, can struggle with last-minute requests and high seasonal demand.\n\n"
@@ -49,10 +53,19 @@ async def analyze_comparison(session, competitor, category, aspect, year, sentim
         )},
         {"role": "user", "content": f"Analyze these reviews:\n\n{reviews}"}
     ]
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "max_tokens": 300,  # Adjust as needed
+        "temperature": TEMPERATURE,
+        "frequency_penalty": FREQUENCY_PENALTY,
+        "presence_penalty": PRESENCE_PENALTY,
+        "top_p": TOP_P,
+    }
     async with session.post(
             "https://api.openai.com/v1/chat/completions",
             headers={"Authorization": f"Bearer {os.getenv('OPENAI_API_KEY')}", "Content-Type": "application/json"},
-            json={"model": MODEL, "messages": messages, "max_tokens": 300}  # Tight limit for conciseness
+            json=payload  # Tight limit for conciseness
     ) as response:
         result = await response.json()
         return result["choices"][0]["message"]["content"]
