@@ -55,7 +55,9 @@ prev_time = section_end
 # Section 2: Data Loading
 # Purpose: load review dataset
 # -------------------------------------------------------------------
-df = pd.read_csv("C:/Users/arjun/OneDrive/CIT data - energy reviews.csv")
+df = pd.read_csv("C:/Users/arjun/OneDrive/CIT energy data v2.csv")
+df['Year-Month'] = pd.to_datetime(df['Date'], format="%d/%m/%Y").dt.strftime('%Y-%m')
+df['review_lower'] = df['Review'].fillna('').str.lower()
 section_end = time.time()
 print(f"Section 2 (Data Loading) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
@@ -135,22 +137,27 @@ prev_time = section_end
 
 # -------------------------------------------------------------------
 # Section 5: Payment Method
-# Purpose: identify customer payment channel, which often correlates with complaint types.
+# Purpose: identify customer payment channel using expanded keywords,
+#          which often correlates with complaint types or user segment.
 #
 # Column:
-# - payment_method : 'Direct Debit' (auto-pay, usually stable billing),
-#                    'Prepayment Meter' (pay-as-you-go, often higher cost),
-#                    'Standard Credit' (manual payment, variable).
+# - payment_method : mentions 'Direct Debit' or 'dd' (auto-pay, usually stable billing),
+#                   - 'Prepayment Meter' - mentions 'prepayment', 'pre-paid', 'pay as you go', 'payg', 'top up', 'key', or 'card'. (pay-as-you-go, often higher cost),
+#                   - 'Other/Unspecified'- default if neither specific type is identified (replaces 'Standard Credit')..
 # -------------------------------------------------------------------
 def payment_method(text):
     t = text.lower()
-    if 'direct debit' in t:
+    # Expanded keywords for Prepayment
+    if re.search(r'\b(direct debit|dd)\b', t): # Use regex for word boundaries
         return 'Direct Debit'
-    if 'prepayment' in t or 'pre-paid' in t:
+    # More comprehensive prepayment check
+    if re.search(r'\b(prepay(ment)?|pre-paid|pay as you go|payg|top up|top-up|key|card)\b', t):
         return 'Prepayment Meter'
-    return 'Standard Credit'
+    # More accurate fallback
+    return 'Other/Unspecified' # Renamed from 'Standard Credit'
 
-df['payment_method'] = df['Review'].apply(payment_method)
+# Apply using the review text directly
+df['payment_method'] = df['Review'].apply(lambda x: payment_method(str(x)) if pd.notna(x) else 'Other/Unspecified')
 section_end = time.time()
 print(f"Section 5 (Payment Method) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
@@ -170,15 +177,18 @@ prev_time = section_end
 # -------------------------------------------------------------------
 def fuel_type_category(text):
     t = text.lower()
-    if 'dual fuel' in t:
+    has_gas = re.search(r'\bgas\b', t)
+    has_elec = re.search(r'\belec(tricity)?\b', t) # Match elec or electricity
+
+    if 'dual fuel' in t or (has_gas and has_elec): # Check for phrase OR both keywords
         return 'Dual Fuel'
-    elif 'electric' in t:
+    elif has_elec: # Check electricity only *after* dual fuel
         return 'Electricity'
-    elif 'gas' in t:
+    elif has_gas: # Check gas only *after* dual fuel
         return 'Gas'
     return 'Unknown'
 
-df['fuel_type'] = df['Review'].apply(fuel_type_category)
+df['fuel_type'] = df['Review'].apply(lambda x: fuel_type_category(str(x)) if pd.notna(x) else 'Unknown')
 section_end = time.time()
 print(f"Section 6 (Fuel Type Classification) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
@@ -197,13 +207,15 @@ prev_time = section_end
 # -------------------------------------------------------------------
 def tariff_type_category(text):
     t = text.lower()
-    if 'fixed' in t:
+    # Use regex for word boundaries to avoid matching words like 'fixedly'
+    if re.search(r'\bfixed\b', t):
         return 'Fixed'
-    if 'variable' in t:
+    # Add 'tracker' and use regex
+    if re.search(r'\b(variable|tracker)\b', t):
         return 'Variable'
     return 'Unknown'
 
-df['tariff_type'] = df['Review'].apply(tariff_type_category)
+df['tariff_type'] = df['Review'].apply(lambda x: tariff_type_category(str(x)) if pd.notna(x) else 'Unknown')
 section_end = time.time()
 print(f"Section 7 (Tariff Type Classification) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
@@ -257,24 +269,54 @@ prev_time = section_end
 # - tfidf_pricing : sum of TF–IDF weights (higher = more distinctive relevance)
 # -------------------------------------------------------------------
 topics = {
-    'pricing':   ['bill', 'overcharged', 'tariff', 'price', 'cost'],
-    'service':   ['call centre', 'support', 'agent', 'rude', 'helpful'],
-    'churn':     ['switch', 'exit fee', 'moving home', 'competitive quote'],
-    'technical': ['outage', 'meter', 'smart meter', 'error'],
-    'green':     ['green', 'renewable', 'eco', 'carbon offset']
+    # Renamed pricing slightly, added more billing terms
+    'billing_pricing': ['bill', 'billing', 'payment', 'pay', 'paid', 'charge', 'charged', 'overcharge', 'overcharged', 'refund', 'credit', 'debit', 'dd', 'tariff', 'price', 'cost', 'expensive', 'cheap', 'rate', 'amount', 'statement'],
+    # Expanded service keywords
+    'service':   ['customer service', 'support', 'agent', 'staff', 'call centre', 'helpline', 'complaint', 'phone', 'call', 'called', 'email', 'chat', 'contact', 'query', 'issue', 'problem', 'resolve', 'helpful', 'rude', 'waiting', 'response'],
+    # Renamed churn slightly
+    'switching_churn': ['switch', 'switching', 'leave', 'leaving', 'left', 'join', 'joined', 'move', 'moved', 'moving home', 'exit fee', 'competitive', 'quote'],
+    'technical_meter': ['meter', 'smart meter', 'reading', 'installation', 'engineer', 'technical', 'outage', 'supply', 'fault', 'error', 'broken'], # Kept smart meter here but will add flag below
+    # New Topic: App/Website
+    'app_website': ['app', 'website', 'online', 'portal', 'log in', 'login', 'account', 'digital', 'site', 'platform'],
+    'green':     ['green', 'renewable', 'eco', 'carbon', 'solar'] # Kept green topic
 }
-for name, kws in topics.items():
-    pat = '|'.join(map(re.escape, kws))
-    df[f'kw_{name}'] = df['Review'].str.lower().str.count(pat)
-    vect = TfidfVectorizer(vocabulary=kws)
-    tfidf = vect.fit_transform(df['Review'].fillna('')).sum(axis=1)
-    df[f'tfidf_{name}'] = pd.Series(tfidf.A1).round(3)
+# compile regex patterns once
+regex_pats = {name: re.compile(r"\b(?:(?:" + "|".join(map(re.escape, kws)) + r"))\b")
+              for name,kws in topics.items()}
+# keyword counts (vectorized)
+for name, pat in regex_pats.items():
+    df[f'kw_{name}'] = df['review_lower'].str.count(pat)
+# build a single TF-IDF matrix for all topic keywords
+all_kws = sorted({kw for kws in topics.values() for kw in kws})
+vect = TfidfVectorizer(vocabulary=all_kws, lowercase=True)
+X = vect.fit_transform(df['review_lower'])
+# sum TF-IDF scores per topic
+for name,kws in topics.items():
+    idxs = [vect.vocabulary_[kw] for kw in kws if kw in vect.vocabulary_]
+    if idxs:
+        df[f'tfidf_{name}'] = X[:, idxs].sum(axis=1).A1.round(3)
+    else:
+        df[f'tfidf_{name}'] = 0.0
 section_end = time.time()
-print(f"Section 10 (Topic Scores) took {section_end - prev_time:.2f} seconds")
+print(f"Section 10 took {section_end - prev_time:.2f}s")
 prev_time = section_end
 
 # -------------------------------------------------------------------
-# Section 11: Promotional Mentions
+# --- Section 11: Smart Meter Flag ---
+# Purpose: Specifically flag reviews mentioning smart meters for targeted analysis.
+# Column:
+# - smart_meter_flag: 1 if 'smart meter(s)' is mentioned, 0 otherwise.
+# -------------------------------------------------------------------
+smart_meter_pattern = r"\bsmart meters?\b"
+df['smart_meter_flag'] = df['review_lower'] \
+    .str.contains(smart_meter_pattern, regex=True) \
+    .astype(int)
+section_end = time.time()
+print(f"Section 11 (Smart Meter Flag) took {section_end - prev_time:.2f} seconds")
+prev_time = section_end
+
+# -------------------------------------------------------------------
+# Section 12: Promotional Mentions
 # Purpose: flag reviews referencing short-term deals or exit fees.
 #
 # Column:
@@ -286,11 +328,11 @@ df['promo_flag'] = df['Review']\
     .str.contains('|'.join(map(re.escape, promo_kw)), flags=re.IGNORECASE, na=False)\
     .astype(int)
 section_end = time.time()
-print(f"Section 11 (Promotional Mentions) took {section_end - prev_time:.2f} seconds")
+print(f"Section 12 (Promotional Mentions) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
 
 # -------------------------------------------------------------------
-# Section 12: Contact Channel Flags
+# Section 13: Contact Channel Flags
 # Purpose: identify which support channel is discussed (app/website/email/phone/chat).
 #
 # Columns:
@@ -303,11 +345,11 @@ for ch in channels:
         .str.contains(rf'\b{re.escape(ch)}\b', flags=re.IGNORECASE, na=False)\
         .astype(int)
 section_end = time.time()
-print(f"Section 12 (Contact Channels) took {section_end - prev_time:.2f} seconds")
+print(f"Section 13 (Contact Channels) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
 
 # -------------------------------------------------------------------
-# Section 13: Regulatory References
+# Section 14: Regulatory References
 # Purpose: flag formal complaints or contract mentions.
 #
 # Column:
@@ -318,11 +360,11 @@ df['reg_ref_flag'] = df['Review']\
     .str.contains('|'.join(map(re.escape, reg_kw)), flags=re.IGNORECASE, na=False)\
     .astype(int)
 section_end = time.time()
-print(f"Section 13 (Regulatory References) took {section_end - prev_time:.2f} seconds")
+print(f"Section 14 (Regulatory References) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
 
 # -------------------------------------------------------------------
-# Section 14: Quality Score
+# Section 15: Quality Score
 # Purpose: aggregate key normalized metrics into a single “quality” indicator.
 #
 # Columns:
@@ -342,7 +384,7 @@ factors = [
 ]
 df['quality_score'] = df[factors].mean(axis=1).round(3)
 section_end = time.time()
-print(f"Section 14 (Quality Score) took {section_end - prev_time:.2f} seconds")
+print(f"Section 15 (Quality Score) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
 
 # -------------------------------------------------------------------
@@ -426,9 +468,54 @@ reg_cnt = df['reg_ref_flag'].sum()
 reg_pct = round(reg_cnt/total*100)
 print(f"Regulatory references: {reg_cnt} reviews ({reg_pct}%)")
 
+# Smart‑meter mentions
+sm_cnt = df['smart_meter_flag'].sum()
+sm_pct = round(sm_cnt/total*100)
+print(f"Smart‑meter mentions:  {sm_cnt} reviews ({sm_pct}%)")
+
+# Avg. topic coverage & length score
+print(f"Avg. topic coverage (normalized): {df['topic_cov_n'].mean().round(3)}")
+print(f"Avg. length score   (normalized): {df['length_score'].mean().round(3)}")
+
+# Normalized sentiment averages
+print(f"Avg. TextBlob [0–1]: {df['sent_tb_n'].mean().round(3)}")
+print(f"Avg. VADER    [0–1]: {df['sent_vader_n'].mean().round(3)}")
+
 # Quality score distribution (unchanged)
 print("Quality score summary:")
 print(df['quality_score'].describe().round(3))
+
+# ───── Time‑Series Overview by Year ─────
+print("\nReviews by Year:")
+# Extract year from Year-Month (string ‘YYYY‑MM’)
+df['Year'] = df['Year-Month'].str[:4]
+
+# Compute total reviews per year, sorted chronologically
+yearly_counts = df['Year'].value_counts().sort_index()
+
+for year, year_total in yearly_counts.items():
+    # For this year, grab its Year-Month buckets in order
+    monthly = (
+        df[df['Year'] == year]
+          ['Year-Month']
+          .value_counts()
+          .reindex(sorted(df['Year-Month'].unique()))
+          .dropna()
+    )
+    # Build a comma‑separated list of month counts
+    monthly_str = ", ".join(f"{cnt:,}" for cnt in monthly.tolist())
+
+    # Print total + the monthly string
+    print(f"  {year}: {year_total:,} reviews; monthly: {monthly_str}")
+
+# ───── Company Breakdown ─────
+print("\nCompanies in data:", df['Company'].nunique())
+print("List of unique companies:", ", ".join(sorted(df['Company'].dropna().unique())))
+print("Top 5 companies by review count:")
+top_comp = df['Company'].value_counts().head(5)
+for comp, cnt in top_comp.items():
+    pct = round(cnt/total*100)
+    print(f"  {comp}: {cnt} reviews ({pct}%)")
 
 # -------------------------------------------------------------------
 # Total run time
