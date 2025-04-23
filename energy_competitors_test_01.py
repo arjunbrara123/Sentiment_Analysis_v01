@@ -56,7 +56,8 @@ prev_time = section_end
 # Purpose: load review dataset
 # -------------------------------------------------------------------
 df = pd.read_csv("C:/Users/arjun/OneDrive/CIT energy data v2.csv")
-df['Year-Month'] = pd.to_datetime(df['Date'], format="%d/%m/%Y").dt.strftime('%Y-%m')
+df['Date'] = pd.to_datetime(df['Date'], format="%d/%m/%Y")
+df['Year-Month'] = df['Date'].dt.to_period('M').dt.to_timestamp()
 df['review_lower'] = df['Review'].fillna('').str.lower()
 section_end = time.time()
 print(f"Section 2 (Data Loading) took {section_end - prev_time:.2f} seconds")
@@ -168,27 +169,44 @@ prev_time = section_end
 #
 # Columns:
 # - fuel_type : one of:
-#     • 'Gas'        — mentions gas only (e.g. “my gas meter”).
+#     • 'Gas Supply'        — mentions gas only (e.g. “my gas meter”).
 #     • 'Electricity' — mentions electric(electricity) only (e.g. “electric bill”).
 #     • 'Dual Fuel'  — explicitly mentions both gas & electricity (e.g. “dual fuel tariff”).
 #     • 'Unknown'    — no clear reference to fuel type.
 #
 # Interpretation: allows comparing, for instance, gas-specific complaints (e.g. heating outages) vs electricity issues (e.g. meter errors), or evaluating overall feedback across dual-fuel users.
 # -------------------------------------------------------------------
-def fuel_type_category(text):
+def fuel_type_category(text: str) -> str:
     t = text.lower()
-    has_gas = re.search(r'\bgas\b', t)
-    has_elec = re.search(r'\belec(tricity)?\b', t) # Match elec or electricity
 
-    if 'dual fuel' in t or (has_gas and has_elec): # Check for phrase OR both keywords
-        return 'Dual Fuel'
-    elif has_elec: # Check electricity only *after* dual fuel
-        return 'Electricity'
-    elif has_gas: # Check gas only *after* dual fuel
-        return 'Gas'
-    return 'Unknown'
+    # 1) remove any literal "british gas" so it never counts toward our gas_terms
+    t = re.sub(r'\bbritish gas\b', '', t, flags=re.IGNORECASE)
 
-df['fuel_type'] = df['Review'].apply(lambda x: fuel_type_category(str(x)) if pd.notna(x) else 'Unknown')
+    # 2) define rich lists of phrases/words for each category
+    gas_terms = [
+        r'\bgas\b', r'\bheating\b', r'\bboiler\b', r'\bfuel\b'
+    ]
+    elec_terms = [
+        r'\belectricity\b', r'\belectric\b', r'\bpower\b',
+        r'\bkwh\b', r'\bplug\b', r'\bsocket\b', r'\bvoltage\b',
+        r'\bpower cut\b', r'\bpower outage\b'
+    ]
+
+    # 3) count occurrences of each (so multiple mentions weigh more)
+    gas_count = sum(len(re.findall(p, t)) for p in gas_terms)
+    elec_count = sum(len(re.findall(p, t)) for p in elec_terms)
+
+    # 4) decide label
+    if   gas_count  > elec_count: return 'Gas Supply'
+    elif elec_count > gas_count: return 'Electricity'
+    else: return 'Unknown'
+
+# apply it
+df['fuel_type'] = df['Review'].fillna('').apply(fuel_type_category)
+
+# mirror into your Final Product Category so downstream code finds it
+df['Final Product Category'] = df['fuel_type']
+
 section_end = time.time()
 print(f"Section 6 (Fuel Type Classification) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
@@ -387,8 +405,187 @@ section_end = time.time()
 print(f"Section 15 (Quality Score) took {section_end - prev_time:.2f} seconds")
 prev_time = section_end
 
+# ────────────────────────────────────────────────────────────────────────────
+# Section 16: write out “Cleaned Reviews” per company + the two LLM files
+# ────────────────────────────────────────────────────────────────────────────
+
+# 1) Cleaned Reviews per company
+#    - same shape as your services version, but spam/lang cols blank
+#    - rename fuel_type→Final Product Category, justification→has_justification
+clean_cols = [
+    "Date", "Year-Month", "fuel_type", "Review", "justification"
+]
+
+df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', dayfirst=True)
+df['Year-Month'] = pd.to_datetime(df['Year-Month'], format='%d/%m/%Y', dayfirst=True)
+
+# Make sure we have those columns:
+for c in clean_cols:
+    if c not in df.columns:
+        df[c] = ""
+# We'll add back the “blank” columns your dashboard wants:
+extras = ["spam_label", "spam_confidence", "detected_lang", "is_english", "review_weight"]
+for c in extras:
+    df[c] = ""
+
+for comp, grp in df.groupby("Company"):
+    out = grp[clean_cols].copy()
+    #out["Date"] = out["Date"].dt.strftime("%d/%m/%Y")
+    #out["Year-Month"] = out["Year-Month"].dt.strftime("%d/%m/%Y")
+    out = out.rename(columns={
+        "fuel_type":       "Final Product Category",
+        "justification":   "has_justification"
+    })
+    # append the blank extras in the right order:
+    for c in extras:
+        out[c] = ""
+    fn = f"Cleaned Reviews {comp}.csv"
+    out.to_csv(f"energy/{fn}", index=False)
+    print(f"→ output energy/{fn!r}")
+
+# 2) LLM Market Summary v3.csv
+#    columns: [Year, Product, Aspect, Analysis]
+years    = sorted(df["Year-Month"].dt.year.unique())
+products = ["Electricity", "Gas Supply"]    # only those two
+aspects  = [
+    "Appointment Scheduling",
+    "Customer Service",
+    "Engineer Experience",
+    "Response Speed",
+    "Value For Money",
+    "Net Zero"
+]
+
+rows = [
+    {"Year":yr, "Product":prod, "Aspect":asp, "Analysis":"AI Gen Summary Here..."}
+    for yr in years
+    for prod in products
+    for asp in aspects
+]
+pd.DataFrame(rows).to_csv("energy/LLM Market Summary v3.csv", index=False)
+print("→ output 'energy/LLM Market Summary v3.csv'")
+
+# 3) LLM Prod Level Summary (v3) – placeholders
+# ----------------------------------------------
+
+# Keywords to gauge each aspect’s relevance in a review
+aspect_keywords = {
+    "Appointment Scheduling": ["appointment", "schedule", "slot", "visit"],
+    "Customer Service":       ["service", "support", "agent", "helpline", "call"],
+    "Engineer Experience":    ["engineer", "technician", "install", "repair", "visit"],
+    "Response Speed":         ["quick", "fast", "slow", "delay", "prompt", "timely"],
+    "Value For Money":        ["bill", "billing", "charge", "price", "cost", "tariff", "rate", "overcharge", "refund"],
+    "Net Zero":               ["green", "eco", "renewable", "carbon", "sustainability", "solar"]
+}
+
+current_year = pd.Timestamp.today().year
+prod_records = []
+
+for comp in df["Company"].unique():
+    for prod in df["Final Product Category"].unique():
+        sub = df[(df["Company"] == comp) &
+                 (df["Final Product Category"] == prod)]
+        for asp in aspects:
+            kws = aspect_keywords[asp]
+            # count total keyword mentions per review
+            counts = sub["Review"].str.count(
+                rf"\b({'|'.join(map(re.escape, kws))})\b",
+                flags=re.IGNORECASE
+            ).fillna(0)
+            # only reviews that mention the aspect
+            mask = counts > 0
+            if mask.sum() > 0:
+                # weighted average sentiment
+                weighted = (sub.loc[mask, "sent_vader_n"] * counts[mask]).sum()
+                total_w = counts[mask].sum()
+                score = round((weighted / total_w) * 100, 1)
+            else:
+                score = float("nan")
+            prod_records.append({
+                "Company": comp,
+                "Product": prod,
+                "Aspect": asp,
+                "Sentiment Score": score,
+                "Sentiment Difference": 0.0,  # placeholder
+                "Year": current_year,
+                "Analysis": "TBD",
+                "Breakdown": "TBD"
+            })
+
+prod_df = pd.DataFrame(prod_records, columns=[
+    "Company",
+    "Product",
+    "Aspect",
+    "Sentiment Score",
+    "Sentiment Difference",
+    "Year",
+    "Analysis",
+    "Breakdown"
+])
+prod_df.to_csv("energy/LLM Prod Level Summary v3.csv", index=False)
+print("→ output energy/LLM Prod Level Summary v3.csv")
+
+# 4) LLM SA Monthly Data.csv
+#    columns:
+#       Year‑Month, Company, Final Product Category,
+#       Sentiment Score,
+#         Billing_sentiment_score, Service_sentiment_score, …, Green_sentiment_score,
+#       Reviews
+#
+# first build the base monthly frame:
+monthly = (
+    df
+    .groupby(["Year-Month","Company","fuel_type"])
+    .agg(
+        SentimentScore=("sent_vader_n","mean"),
+        Reviews       =("Review","count")
+    )
+    .reset_index()
+    .rename(columns={"fuel_type":"Final Product Category",
+                     "SentimentScore":"Sentiment Score"})
+)
+monthly["Sentiment Score"] = round(100 * monthly["Sentiment Score"])
+
+for asp in aspects:
+    kws = aspect_keywords[asp]
+    # for each review, count keywords
+    tmp = df.copy()
+    tmp["w"] = tmp["Review"].str.count(
+        rf"\b({'|'.join(map(re.escape,kws))})\b",
+        flags=re.IGNORECASE
+    ).fillna(0).astype(int)
+    # drop zero‑weight
+    tmp = tmp[tmp["w"]>0]
+    # weighted sentiment
+    tmp["w_sent"] = tmp["sent_vader_n"] * tmp["w"]
+    grp = (
+        tmp
+        .groupby(["Year-Month","Company","Final Product Category"])
+        .agg(num=("w_sent","sum"), den=("w","sum"))
+        .reset_index()
+    )
+    # compute and round to 3 decimals
+    grp[f"{asp}_sentiment_score"] = (100*grp["num"]/grp["den"]).round(1)
+    # keep only required cols
+    grp = grp[["Year-Month","Company","Final Product Category",f"{asp}_sentiment_score"]]
+    # merge back
+    monthly = monthly.merge(
+        grp,
+        on=["Year-Month","Company","Final Product Category"],
+        how="left"
+    )
+
+# finally write it out
+monthly["Year-Month"] = monthly["Year-Month"].dt.strftime("%d/%m/%Y")
+monthly.to_csv("energy/LLM SA Monthly Data.csv", index=False)
+print("→ output 'energy/LLM SA Monthly Data.csv'")
+
+section_end = time.time()
+print(f"Section 16 Dashboard File Generation took {section_end - prev_time:.2f} seconds")
+prev_time = section_end
+
 # -------------------------------------------------------------------
-# Section 15: Summary Statistics
+# Section 17: Summary Statistics
 # Purpose: provide quick counts and averages to interpret results
 # -------------------------------------------------------------------
 print("\n=== Summary Statistics ===")
@@ -488,7 +685,7 @@ print(df['quality_score'].describe().round(3))
 # ───── Time‑Series Overview by Year ─────
 print("\nReviews by Year:")
 # Extract year from Year-Month (string ‘YYYY‑MM’)
-df['Year'] = df['Year-Month'].str[:4]
+df['Year'] = df['Year-Month'].dt.year
 
 # Compute total reviews per year, sorted chronologically
 yearly_counts = df['Year'].value_counts().sort_index()
@@ -520,8 +717,12 @@ for comp, cnt in top_comp.items():
 # -------------------------------------------------------------------
 # Total run time
 # -------------------------------------------------------------------
-total_time = time.time() - start_time
-print(f"Total run time: {total_time:.2f} seconds")
+
+print("Saving final output...")
 
 # Save annotated DataFrame
 df.to_csv('annotated_reviews.csv', index=False)
+
+total_time = time.time() - start_time
+print(f"Total run time: {total_time:.2f} seconds")
+
