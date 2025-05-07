@@ -3,13 +3,13 @@ import os
 import pandas as pd
 import time
 from datetime import timedelta
-from dotenv import load_dotenv
+#from dotenv import load_dotenv
 
 # Load environment variables from a .env file
 #load_dotenv()
 
 # Fetch the OpenAI API key from environment variables
-#API_KEY = os.getenv("OPENAI_API_KEY")
+API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI()
 
@@ -18,11 +18,26 @@ client = OpenAI()
 #ASPECTS_TO_ANALYSE = ["Product Categorisation"]
 #ASPECTS_TO_ANALYSE = ["Overall Sentiment", "Service Quality", "Response Speed", "Solution Quality", "Company Reliability", "Ease of Booking", "Service Delivery Issues", "Product Coverage", "Communication Failures", "Financial Concerns"]
 ASPECTS_TO_ANALYSE = ["Overall Sentiment", "Appointment Scheduling", "Customer Service", "Response Speed", "Engineer Experience", "Solution Quality", "Value for Money"]
+#ASPECTS_TO_ANALYSE = ["Overall Sentiment", "Appointment Scheduling", "Customer Service", "Engineer Experience", "Value for Money"]
+ASPECTS_TO_ANALYSE = ["Engineer Experience", "Value For Money"]
 
 # Specify input and output file paths
 #input_file = "HomeServe Raw Data Feb24 Onwards.csv" #"BG_20pct_Reviews_March_Onwards.csv"  # Replace with your input file path
-input_file = "CheckATrade Reviews of Relevant Prods 15k.csv"
-output_file = "CheckATrade 15k Output v01.csv"  # Replace with your output file path
+#input_file = "CheckATrade Reviews of Relevant Prods 15k.csv"
+#input_file = "BG_Second_Pass_Reviews.csv"
+#input_file = "Corgi Homeplan Reviews 2024.csv"
+#input_file = "247 Home Rescue Raw Reviews 2024 Only.csv"
+#input_file = "BG End-2024 Reviews.csv"
+#input_file = "HomeServe 2024 Start Data.csv"
+input_file = "HomeServe_Start_2024_Known_Prods.csv"
+#input_file = "Domestic & General 2024 Gas Product Reviews Only.csv"
+#input_file = "BG 2024 Non-Gas Reviews.csv"
+input_file = "BG LLM Energy TrustPilot Reviews.csv"
+
+#output_file = "BG End 2024 Prod and Sentiment.csv"  # Replace with your output file path
+#output_file = "HomeServe Start 2024 Reviews Sentiment.csv"
+#output_file = "Domestic & General 2024 Gas Product Sentiment.csv"
+output_file = input_file[:-4] + "_output.csv"
 
 def analyze_aspect_sentiment(review, aspect):
     """
@@ -44,7 +59,7 @@ def analyze_aspect_sentiment(review, aspect):
             #         "3. Home Electrical: Insurance for home electrics, including cover for wiring, fusebox breakdowns and broken sockets.\n"
             #         "4. Unknown: Please use this only if there is absolutely no information to categorize the review, after making every effort to find relevant clues.\n\n"
             #         "### Additional Guidance:\n"
-            #         "- Pleease look for specific words, phrases, or scenarios that suggest the correct category (e.g., 'boiler' → Gas Products).\n"
+            #         "- Please look for specific words, phrases, or scenarios that suggest the correct category (e.g., 'boiler' → Gas Products).\n"
             #         "- If multiple product types are mentioned, select the one most emphasized or central to the review.\n"
             #         "- Please include a confidence score between 0 and 100 as to how certain you are that you have classified the product type correctly.\n"
             #         "- Avoid marking as 'Unknown' unless all other attempts to categorize fail.\n\n"
@@ -59,14 +74,15 @@ def analyze_aspect_sentiment(review, aspect):
             # messages=[
             #     {"role": "system", "content": (
             #         "You are a product analysis expert. Your task is to assess customer reviews for British Gas "
-            #         "and determine the most appropriate product category from the following five options: \n"
+            #         "and determine the most appropriate product category from the following six options: \n"
             #         "1. Gas Products: Covers boiler insurance, home care, annual service visits, or any instances where engineers visit customers' homes to service, install, or fix boilers or fix the hot water not running.\n"
             #         "2. Energy: Relates to British Gas as an energy / electricity supplier, or gas supply services, including tariffs, smart meters, and energy bills including charges and billing issues for unfixed tariffs. This category does not involve engineers visiting homes.\n"
             #         "3. Appliance Cover: Includes insurance for home appliances like ovens, washing machines, or any electrical appliances that we repair if they break down.\n"
-            #         "4. Plumbing and Drains: Insurance for issues such as blocked drains, frozen pipes, or plumbing repairs, often handled by DynoRod or similar partners.\n"
-            #         "5. Unknown: Please use this only if there is absolutely no information to categorize the review, after making every effort to find relevant clues.\n\n"
+            #         "4. Home Electrical: Insurance for home electrics, including cover for wiring, fusebox breakdowns and broken sockets.\n"
+            #         "5. Plumbing and Drains: Insurance for issues such as blocked drains, frozen pipes, or plumbing repairs, often handled by DynoRod or similar partners.\n"
+            #         "6. Unknown: Please use this only if there is absolutely no information to categorize the review, after making every effort to find relevant clues.\n\n"
             #         "### Additional Guidance:\n"
-            #         "- Pleease look for specific words, phrases, or scenarios that suggest the correct category (e.g., 'boiler' → Gas Products, 'billing' → Energy).\n"
+            #         "- Please look for specific words, phrases, or scenarios that suggest the correct category (e.g., 'boiler' → Gas Products, 'billing' → Energy).\n"
             #         "- If multiple product types are mentioned, select the one most emphasized or central to the review.\n"
             #         "- Please include a confidence score between 0 and 100 as to how certain you are that you have classified the product type correctly.\n"
             #         "- Avoid marking as 'Unknown' unless all other attempts to categorize fail.\n\n"
@@ -78,21 +94,41 @@ def analyze_aspect_sentiment(review, aspect):
             #     {"role": "user",
             #      "content": f"Review: {review}\nQuestion: What is the product type, confidence score, and reason for your categorization?"}
             # ],
+            # messages=[
+            #     {"role": "system", "content": (
+            #         "You are a sentiment analysis expert. Your task is to assess customer reviews for these 247 Home Rescue company reviews "
+            #         "based on specific aspects. For each review, provide a sentiment score "
+            #         "between -100 and 100, where:\n"
+            #         "-100 = Extremely negative sentiment.\n"
+            #         "0 = Neutral sentiment.\n"
+            #         "100 = Extremely positive sentiment.\n"
+            #         "Focus only on the specified aspect and provide a brief explanation for your score.\n"
+            #         "Provide the output in the following format:\n"
+            #         "Score: < numeric_value >\n"
+            #         "Reason: < brief_explanation >\n"
+            #     )},
+            #     {"role": "user",
+            #      "content": f"Review: {review}\nQuestion: What is the sentiment score and reason for '{aspect}'?"}
+            # ],
             messages=[
                 {"role": "system", "content": (
-                    "You are a sentiment analysis expert. Your task is to assess customer reviews for these CheckATrade local contractors "
-                    "based on specific aspects. For each review, provide a sentiment score "
-                    "between -100 and 100, where:\n"
-                    "-100 = Extremely negative sentiment.\n"
-                    "0 = Neutral sentiment.\n"
-                    "100 = Extremely positive sentiment.\n"
-                    "Focus only on the specified aspect and provide a brief explanation for your score.\n"
-                    "Provide the output in the following format:\n"
-                    "Score: < numeric_value >\n"
-                    "Reason: < brief_explanation >\n"
+                    "You are a product analysis expert. Your task is to assess customer reviews for British Gas Energy "
+                    "and determine the most appropriate product category from the following three options: \n"
+                    "1. Electricity Product: Covers the supply of electricity to homes or businesses, including fixed or variable tariffs, smart meter usage, renewable energy options, or issues related to power supply or billing for electricity.\n"
+                    "2. Gas Product: Covers the supply of natural gas for heating, cooking, or hot water, including fixed or variable tariffs, smart meter usage, renewable gas options, or issues related to gas supply or billing for gas.\n"
+                    "3. Unknown: Please use this only if there is absolutely no information to categorize the review, after making every effort to find relevant clues.\n\n"
+                    "### Additional Guidance:\n"
+                    "- Please look for specific words, phrases, or scenarios that suggest the correct category (e.g., 'electricity bill' → Electricity Product, 'gas heating' → Gas Product).\n"
+                    "- If both electricity and gas are mentioned, select the one most emphasized or central to the review.\n"
+                    "- Please include a confidence score between 0 and 100 as to how certain you are that you have classified the product type correctly.\n"
+                    "- Avoid marking as 'Unknown' unless all other attempts to categorize fail.\n\n"
+                    "Provide the output in this exact format:\n"
+                    "Score: <numeric_value>\n"
+                    "Product: <product_type>\n"
+                    "Reason: <brief_explanation>\n\n"
                 )},
                 {"role": "user",
-                 "content": f"Review: {review}\nQuestion: What is the sentiment score and reason for '{aspect}'?"}
+                 "content": f"Review: {review}\nQuestion: What is the product type, confidence score, and reason for your categorization?"}
             ],
             temperature=0.2,
             max_tokens=150
@@ -297,4 +333,3 @@ process_reviews(input_file, output_file, ASPECTS_TO_ANALYSE)
 # print(f"Aspect: {example_aspect}")
 # print(f"Sentiment Score: {score}")
 # print(f"Reason: {reason}")
-
