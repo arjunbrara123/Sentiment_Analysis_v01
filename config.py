@@ -141,25 +141,37 @@ class AspectConfig:
         "Appointment Scheduling": "⌚ Appointment Scheduling",
         "Customer Service": "📞 Customer Service",
         "Response Speed": "🥇 Response Speed",
+        "Energy Readings": "🔦 Energy Readings",
         "Engineer Experience": "🧑‍🔧 Engineer Experience",
         "Solution Quality": "🧠 Solution Quality",
+        "Meter Installations": "🧱 Meter Installations",
         "Value For Money": "💵 Value For Money",
+        "Accounts & Billing": "🟩 Accounts & Billing",
+        "Net Zero": "🌱 Net Zero",
     })
     aspect_colours: Dict[str, str] = field(default_factory=lambda: {
         "Appointment Scheduling": "#6a76ac",  # dark blue
         "Customer Service": "#da3d34",  # dark red
         "Response Speed": "#ed9f40",  # orange
+        "Energy Readings": "#ed9f40",  # orange
         "Engineer Experience": "#00c2e0",  # light blue
         "Solution Quality": "#ff78cb",  # pink
+        "Meter Installations": "#ff78cb",  # pink
+        "Net Zero": "#ff78cb",  # pink
         "Value For Money": "#00a480",  # green
+        "Accounts & Billing": "#00a480",  # green
     })
     aspects: List[str] = field(default_factory=lambda: [
         "Appointment Scheduling",
         "Customer Service",
         "Response Speed",
+        "Energy Readings",
         "Engineer Experience",
         "Solution Quality",
+        "Meter Installations",
         "Value For Money",
+        "Accounts & Billing",
+        "Net Zero",
     ])
 
 
