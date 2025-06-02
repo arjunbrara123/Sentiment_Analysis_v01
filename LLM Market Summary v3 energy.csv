@@ -1,7 +1,19 @@
 Year,Product,Aspect,Analysis
-2024,Energy,Strength,123
-2024,Energy,Weakness,123
-2024,Energy,Improvement,123
+2024,Energy,Strength,"<b>Field Force Quality: </b> Top-three engineer satisfaction (77 %) indicates strong technical training and customer rapport.
+<br><br>
+<b>Brand Familiarity & Trust: </b> Despite frustrations, reviews often cite deciding to ""<i>return to the safe choice of BG</i>"", suggesting goodwill we can rebuild.
+<br><br>
+<b>Scale for Rapid Roll-out:</b> Customers note appreciation when new tariffs or upgrades do land quickly; scale lets us pivot fast once processes tighten."
+2024,Energy,Weakness,"<b>Contact-Centre Responsiveness</b>: Longest negative narrative chains centre on unanswered calls and multi-week escalations.
+<br><br>
+<b>Bill & Reading Accuracy</b>: Half the complaints across categories link back to unexpected estimates or DD hikes.
+<br><br>
+<b>Perceived Pricing Premium</b>: Frequent references to being 'the expensive one' undermine retention when service falters."
+2024,Energy,Improvement,"<b>Adopt 'First-Touch Resolution' model:</b> Empower agents with refund authority up to £150 and 2-hour e-mail SLAs, mirroring Octopus's playbook.
+<br><br>
+<b>Deploy Real-Time Usage Portal</b>: Live smart-meter feed with variance alerts; pilot on 50k dual-fuel customers to cut reading disputes by 25%.
+<br><br>
+<b>Transparent Quarterly Price-Check:</b> Auto-generated, peer-benchmarked statement showing how each customer could save inside BG to pre-empt churn."
 2024,Energy,Appointment Scheduling,"(60.7% positive vs 73.3% market avg) - Customers praise the odd smooth booking ("" appointment made for next day... text confirmation both times "") but far more often complain of long lead-times and missed EV-tariff installs ("" still no charger slot a year after buying my car ""). By contrast, E.ON Energy wins plaudits for proactive follow-ups ("" 100% service once engaged; engineer phoned ahead to tighten the window ""), while Scottish Power shows what to avoid ("" website down, 40-min queue just to clarify what I booked ""). <br><br><b>Action</b>: copy E.ON's ""call-back 24 h before"" practice and publish real-time slot availability."
 2024,Energy,Customer Service,"(55.1% vs 85.5%) - Positive calls describe polite agents ("" advisor switched me in five minutes, answered every question ""), yet reviews are dominated by unreturned messages and month-long escalations ("" 5 Aug - still no response... next stop Ombudsman ""). Octopus stands out ("" nice and competent staff "") for rapid, empathetic, single-touch resolution, while Shell's ""vulture-hold music"" reminds us what bad feels like. <br><br><b>Action</b>: pilot Octopus-style front-line empowerment: first-contact ownership and e-mail follow-ups within 2 hrs."
 2024,Energy,Energy Readings,"(51.4% vs 75.0%) - Confidence is eroded by missing or stuck smart-meter feeds ("" BG can't be trusted... knowingly mis-billed for months ""). Octopus' ""Meter Catch-up"" emails ("" offered money back if readings disagreed "") reassure users; Shell's disputes show what happens without transparency. <br><br><b>Action</b>: push real-time reading dashboards in the app and auto-credit any estimate >10% off verified usage."
