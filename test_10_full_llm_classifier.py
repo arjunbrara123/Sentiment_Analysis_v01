@@ -1,5 +1,4 @@
 """
-review_analysis.py
 
 A simple, easy-to-use script for non-expert users to:
   • Classify reviews into product categories per company definitions
@@ -38,11 +37,10 @@ COMPANY = 'British Gas Services'  # choose from COMPANIES keys
 MODE = 'classification'            # 'classification', 'sentiment', or 'both'
 ASPECT_MODE = 'energy'  # 'services' or 'energy'
 TEST_MODE = False        # True = run only SAMPLE_SIZE reviews
-SAMPLE_SIZE = 50         # number of reviews when TEST_MODE=True
-INPUT_FILE = 'BG All TrustPilot Data Pt2.csv' #'BG All TrustPilot Data.csv' #'BG 2024 TrustPilot Data.csv'
+SAMPLE_SIZE = 10         # number of reviews when TEST_MODE=True
+INPUT_FILE = 'BG All TrustPilot Data.csv' #'BG All TrustPilot Data.csv' #'BG 2024 TrustPilot Data.csv'
 API_KEY = ''             # leave blank to use OPENAI_API_KEY in env
 BATCH_SIZE = 5
-MODEL = "gpt-4.1-mini"
 USE_BATCHING = False
 API_KEY_OPENAI = ''
 API_KEY_GOOGLE = ''
@@ -50,11 +48,13 @@ API_KEY_ANTHROPIC = ''
 
 # Model mapping for each provider
 MODELS = {
-    'openai': 'gpt-4.1-mini',
+    'openai': 'gpt-4.1-mini', # Or 'o3-pro-2025-06-10'
     'google': 'gemini-2.5-flash-preview-05-20', # Or 'gemini-2.5-pro-preview-06-05'
-    'anthropic': 'claude-3-sonnet-20240229' # Or 'claude-3-haiku-20240307' for speed
+    'anthropic': 'claude-3-5-haiku-latest' # Or 'claude-3-7-sonnet-latest' for higher accuracy
 }
-
+MODEL = MODELS[LLM_PROVIDER]
+print(MODEL)
+print("============")
 # ---------------------------------------------------------
 
 import os
@@ -64,6 +64,7 @@ import time
 from datetime import datetime, timedelta
 from openai import OpenAI, OpenAIError
 import google.generativeai as genai
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from anthropic import Anthropic, AnthropicError
 from dotenv import load_dotenv
 from tqdm import tqdm
@@ -73,7 +74,7 @@ import re
 PRODUCT_DEFINITIONS = {
     #'Electricity Supply': 'Covers the supply of electricity to homes or businesses, including fixed or variable tariffs, smart meter usage, renewable energy options, or issues related to power supply or billing for electricity.',
     #'Gas Supply': 'Covers the supply of natural gas for heating, cooking, or hot water, including fixed or variable tariffs, smart meter usage, renewable gas options, or issues related to gas supply or billing for gas.',
-    'Gas Products': 'Covers boiler insurance, home care, annual service visits, or any instances where engineers visit customers homes to service, install, or fix boilers, central heating, or fix the hot water not running.',
+    'Boiler Cover': 'Covers boiler insurance, home care, annual service visits, or any instances where engineers visit customers homes to service, install, or fix boilers, central heating, or fix the hot water not running.',
     'Energy': 'Relates to British Gas as an energy / electricity supplier, or gas supply services, including tariffs, smart meters, and energy bills including charges and billing issues for unfixed tariffs. This category does not ever involve engineers visiting homes.',
     'Plumbing and Drains': 'Insurance for issues such as blocked drains, frozen pipes, or plumbing repairs, often handled by DynoRod or similar partners.',
     'Appliance Cover': 'Includes insurance for home appliances like ovens, washing machines, or any electrical appliances that we repair if they break down',
@@ -83,13 +84,13 @@ PRODUCT_DEFINITIONS = {
     'Unknown': 'Please use this only if there is absolutely no information to categorize the review, after making every effort to find relevant clues. If you have to infer anything from non-conclusive evidence such as the company name or the sentiment of the review, it should be classificed as unknown.',
 }
 COMPANIES = {
-    'British Gas Services': ['Gas Products', 'Energy', 'Plumbing and Drains', 'Appliance Cover', 'Home Electrical'],
+    'British Gas Services': ['Boiler Cover', 'Energy', 'Plumbing and Drains', 'Appliance Cover', 'Home Electrical'],
     'British Gas Energy': ['Electricity Supply', 'Gas Supply'],
-    "HomeServe": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
-    "CheckATrade": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
-    "Corgi HomePlan": ["Gas Products", "Plumbing and Drains", "Home Electrical", "Building"],
-    "Domestic & General": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
-    "247 Home Rescue": ["Gas Products", "Plumbing and Drains", "Appliance Cover", "Home Electrical", "Pest Control"],
+    "HomeServe": ["Boiler Cover", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
+    "CheckATrade": ["Boiler Cover", "Plumbing and Drains", "Home Electrical", "Building"],
+    "Corgi HomePlan": ["Boiler Cover", "Plumbing and Drains", "Home Electrical", "Building"],
+    "Domestic & General": ["Boiler Cover", "Plumbing and Drains", "Appliance Cover", "Home Electrical"],
+    "247 Home Rescue": ["Boiler Cover", "Plumbing and Drains", "Appliance Cover", "Home Electrical", "Pest Control"],
     'Octopus': ['Electricity Supply', 'Gas Supply'],
 }
 for cats in COMPANIES.values():
@@ -99,7 +100,7 @@ for cats in COMPANIES.values():
 # Aspect sets
 ASPECT_SETS = {
     'services': ["Overall Sentiment", "Appointment Scheduling", "Customer Service", "Response Speed", "Engineer Experience", "Solution Quality", "Value for Money"],
-    'energy': ["Overall Sentiment", "Appointment Scheduling", "Customer Service", "Response Speed", "Meter Readings", "Value for Money"]
+    'energy': ["Overall Sentiment", "Appointment Scheduling", "Customer Service", "Energy Readings", "Meter Readings", "Value for Money"]
 }
 
 # Validate configuration
@@ -119,7 +120,7 @@ def validate_config():
     if LLM_PROVIDER not in ('openai', 'google', 'anthropic'):
             print(f"Error: LLM_PROVIDER must be 'openai', 'google', or 'anthropic'.")
             sys.exit(1)
-    valid_models = ('gpt-4o-mini', 'gpt-3.5-turbo', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1-nano', 'gemini-2.5-flash-preview-05-20', 'gemini-2.5-pro-preview-06-05')
+    valid_models = ('gpt-4o-mini', 'gpt-3.5-turbo', 'gpt-4o', 'gpt-4.1-mini', 'gpt-4.1-nano', 'gemini-2.5-flash-preview-05-20', 'gemini-2.5-pro-preview-06-05', 'claude-3-5-haiku-latest')
     if MODEL not in valid_models:
         print(f"Error: MODEL must be one of {valid_models}")
         sys.exit(1)
@@ -238,7 +239,13 @@ def generate_completion(client, provider, model, system_msg, user_msg, max_token
                 max_output_tokens=max_tokens,
                 temperature=temperature
             )
-            response = client.generate_content(full_prompt, generation_config=generation_config)
+            safety_settings = {
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+            response = client.generate_content(full_prompt, generation_config=generation_config, safety_settings=safety_settings)
             return response.text.strip()
 
         elif provider == 'anthropic':
@@ -258,7 +265,53 @@ def generate_completion(client, provider, model, system_msg, user_msg, max_token
         print(f"Warning: API call failed for {provider} with error: {e}")
         return "" # Return empty string on failure
 
-def classify_product(review, client, categories):
+def generate_completion(client, provider, model, system_msg, user_msg, max_tokens=150, temperature=0.1):
+    """
+    Calls the appropriate LLM provider and returns the response text.
+    This function acts as a wrapper to handle different API formats and exceptions.
+    """
+    try:
+        if provider == 'openai':
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {'role': 'system', 'content': system_msg},
+                    {'role': 'user', 'content': user_msg}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            return response.choices[0].message.content.strip()
+
+        elif provider == 'google':
+            # Gemini combines system and user prompts.
+            full_prompt = f"{system_msg}\n\n{user_msg}"
+            generation_config = genai.types.GenerationConfig(
+                max_output_tokens=max_tokens,
+                temperature=temperature
+            )
+            # The client is the model itself for google-generativeai
+            response = client.generate_content(full_prompt, generation_config=generation_config)
+            return response.text.strip()
+
+        elif provider == 'anthropic':
+            response = client.messages.create(
+                model=model,
+                system=system_msg,
+                messages=[
+                    {'role': 'user', 'content': user_msg}
+                ],
+                temperature=temperature,
+                max_tokens=max_tokens
+            )
+            return response.content[0].text.strip()
+
+    except (OpenAIError, AnthropicError, Exception) as e:
+        # Catch specific and general exceptions from all providers
+        print(f"Warning: API call failed for {provider} with error: {e}")
+        return "" # Return empty string on failure, handled by calling functions
+
+def classify_product(review, client, provider, model, categories):
 
     if COMPANY == "British Gas Services":
         # Create a detailed list of category definitions for the prompt
@@ -281,15 +334,14 @@ def classify_product(review, client, categories):
                 '\n'.join(f"{i + 1}. {cat}" for i, cat in enumerate(categories)) +
                 "\nReply exactly in format:\nScore: <0-100>\nProduct: <category>\nReason: <brief explanation>"
         )
+    user_msg = f"Review: {review}"
+    raw = generate_completion(client, provider, model, system_msg, user_msg, max_tokens=150, temperature=0.0)
+
+
+    if not raw:
+        return 0, 'Unknown', 'API call failed'
+
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {'role': 'system', 'content': system_msg},
-                {'role': 'user', 'content': f"Review: {review}"}
-            ], temperature=0.0, max_tokens=150
-        )
-        raw = response.choices[0].message.content.strip()
         score_match = re.search(r'Score:\s*(\d+)', raw)
         product_match = re.search(r'Product:\s*([^\n]+)', raw)
         reason_match = re.search(r'Reason:\s*([^\n]+)', raw)
@@ -364,23 +416,22 @@ def classify_product_batch(reviews, client, categories):
         return [(0, 'Unknown', 'API failure')] * len(reviews)
 
 
-def analyze_sentiments(review, aspects, client):
-    prompt = (
+def analyze_sentiments(review, aspects, client, provider, model):
+    system_msg = (
             "You are a sentiment analysis expert. For each aspect below, provide a score (-100 to 100) and a brief reason.\n" +
             "Aspects:\n" + '\n'.join(f"- {asp}" for asp in aspects) +
             "\nIf an aspect cannot be evaluated due to missing information, use a score of 0.\n" +
             "Reply exactly in the format for each aspect:\nAspect: <name>\nScore: <value>\nReason: <text>\n"
     )
+    user_msg = f"Review: {review}"
+
+    raw = generate_completion(client, provider, model, system_msg, user_msg, max_tokens=500, temperature=0.1)
+
+    if not raw:
+        return {asp: (0, 'API call failed') for asp in aspects}
+
+    results = {}
     try:
-        response = client.chat.completions.create(
-            model=MODEL,
-            messages=[
-                {'role': 'system', 'content': prompt},
-                {'role': 'user', 'content': f"Review: {review}"}
-            ], temperature=0.2, max_tokens=400
-        )
-        raw = response.choices[0].message.content.strip()
-        results = {}
         blocks = raw.split('Aspect: ')[1:]  # Skip leading
         for block in blocks:
             lines = block.splitlines()
@@ -485,9 +536,20 @@ def main():
 
     initialize_output_file(output_file, aspects, bool(categories))
 
-    client = OpenAI(api_key=get_api_key(LLM_PROVIDER))
+    # Initialize the correct LLM client
+    api_key = get_api_key(LLM_PROVIDER)
+    model_name = MODELS[LLM_PROVIDER]
+    client = None
+    if LLM_PROVIDER == 'openai':
+        client = OpenAI(api_key=api_key)
+    elif LLM_PROVIDER == 'google':
+        genai.configure(api_key=api_key)
+        client = genai.GenerativeModel(model_name)
+    elif LLM_PROVIDER == 'anthropic':
+        client = Anthropic(api_key=api_key)
 
     start = time.time()
+    print(f"Provider: {LLM_PROVIDER.capitalize()}, Model: {model_name}")
 
     if USE_BATCHING:
         # Process reviews in batches
@@ -535,11 +597,11 @@ def main():
             result = {'Date': row['Date'], 'Year-Month': row['Year-Month'], 'Review': review}
 
             if categories:
-                prod_score, prod_cat, prod_reason = classify_product(review, client, categories)
+                prod_score, prod_cat, prod_reason = classify_product(review, client, LLM_PROVIDER, MODEL, categories)
                 result.update({'prod_score': prod_score, 'prod_category': prod_cat, 'prod_reason': prod_reason})
 
             if aspects:
-                sentiment_results = analyze_sentiments(review, aspects, client)
+                sentiment_results = analyze_sentiments(review, aspects, client, LLM_PROVIDER, MODEL)
                 for asp, (score, reason) in sentiment_results.items():
                     result[f"{asp}_score"] = score
                     result[f"{asp}_reason"] = reason
