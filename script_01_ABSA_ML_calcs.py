@@ -267,7 +267,7 @@ def generate_final_reports(df, detailed_filename, aggregated_filename, quality_s
     df_agg.fillna(0, inplace=True)
     for col in df_agg.columns:
         if pd.api.types.is_numeric_dtype(df_agg[col]):
-            if col == 'Reviews Count' or '_Volume' in col or '_Reviews' in col: df_agg[col] = df_agg[col].astype(int)
+            if col == 'Reviews Count' or '_Volume' in col or '_Reviews' in col or 'Sentiment' in col: df_agg[col] = df_agg[col].astype(int)
             elif 'score' in col or 'volatility' in col: df_agg[col] = df_agg[col].round(1)
     
     df_agg.rename(columns={'Month': 'Year-Month', cols['product_col']: 'Final Product Category'}, inplace=True)
